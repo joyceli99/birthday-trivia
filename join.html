@@ -6,138 +6,101 @@
 <title>💎 Join Juliaaaa's Trivia</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
-
   :root {
-    --pink-bg: #FFF0F7;
-    --pink-hot: #D4537E;
-    --pink-deep: #72243E;
-    --pink-light: #FBEAF0;
-    --pink-border: #F4C0D1;
-    --white: #ffffff;
-    --text: #3a0f20;
-    --text-muted: #993556;
+    --pink-bg:#FFF0F7;--pink-hot:#D4537E;--pink-deep:#72243E;
+    --pink-light:#FBEAF0;--pink-border:#F4C0D1;--white:#ffffff;
+    --text:#3a0f20;--text-muted:#993556;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--pink-bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-  }
-
-  .card {
-    background: var(--white);
-    border: 1.5px solid var(--pink-border);
-    border-radius: 20px;
-    padding: 2.5rem 2rem;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-  }
-
-  .diamonds { font-size: 20px; letter-spacing: 6px; margin-bottom: 12px; }
-  h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 26px;
-    color: var(--pink-deep);
-    margin-bottom: 6px;
-  }
-  .sub { font-size: 13px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2rem; }
-
-  .input-wrap { margin-bottom: 1rem; }
-  input[type="text"] {
-    width: 100%;
-    padding: 14px 18px;
-    border: 1.5px solid var(--pink-border);
-    border-radius: 12px;
-    font-size: 16px;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    background: var(--pink-bg);
-    outline: none;
-    text-align: center;
-    transition: border-color 0.2s;
-  }
-  input[type="text"]::placeholder { color: var(--text-muted); opacity: 0.7; }
-  input[type="text"]:focus { border-color: var(--pink-hot); }
-
-  .btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--pink-hot);
-    color: var(--white);
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-  }
-  .btn:hover { background: var(--pink-deep); }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.5; cursor: default; }
-
-  .error { font-size: 13px; color: #A32D2D; margin-top: 8px; min-height: 18px; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--pink-bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+  .card{background:var(--white);border:1.5px solid var(--pink-border);border-radius:20px;padding:2rem 1.75rem;max-width:400px;width:100%;text-align:center;}
+  .diamonds{font-size:18px;letter-spacing:6px;margin-bottom:10px;}
+  h1{font-family:'Playfair Display',serif;font-size:24px;color:var(--pink-deep);margin-bottom:4px;}
+  .sub{font-size:12px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1.5rem;}
+  input[type="text"]{width:100%;padding:13px 16px;border:1.5px solid var(--pink-border);border-radius:12px;font-size:16px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--pink-bg);outline:none;text-align:center;margin-bottom:10px;transition:border-color 0.2s;}
+  input[type="text"]:focus{border-color:var(--pink-hot);}
+  input::placeholder{color:var(--text-muted);opacity:0.7;}
+  .btn{width:100%;padding:13px;background:var(--pink-hot);color:var(--white);border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background 0.15s;}
+  .btn:hover{background:var(--pink-deep);}
+  .btn:disabled{opacity:0.5;cursor:default;}
+  .error{font-size:13px;color:#A32D2D;margin-top:6px;min-height:18px;}
 
   /* Joined state */
-  .joined-state { display: none; }
-  .joined-icon { font-size: 48px; margin-bottom: 12px; }
-  .joined-name { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--pink-deep); margin-bottom: 6px; }
-  .joined-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; }
+  .joined{display:none;}
+  .joined-icon{font-size:44px;margin-bottom:10px;}
+  .joined-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--pink-deep);margin-bottom:4px;}
+  .joined-sub{font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;}
 
-  .leaderboard { text-align: left; }
-  .lb-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
-  .lb-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--pink-border);
-  }
-  .lb-row:last-child { border-bottom: none; }
-  .lb-rank { font-size: 12px; color: var(--text-muted); width: 18px; }
-  .lb-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: var(--pink-light);
-    border: 1px solid var(--pink-border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 600; color: var(--pink-deep);
-    flex-shrink: 0;
-  }
-  .lb-avatar.me { background: var(--pink-hot); color: var(--white); border-color: var(--pink-hot); }
-  .lb-name { flex: 1; font-size: 14px; color: var(--text); }
-  .lb-pts { font-size: 13px; font-weight: 600; color: var(--pink-deep); }
-  .lb-crown { font-size: 14px; }
+  /* Answer box */
+  .answer-zone{display:none;margin-bottom:1rem;}
+  .answer-zone-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+  .answer-input{width:100%;padding:13px 16px;border:2px solid var(--pink-hot);border-radius:12px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--pink-bg);outline:none;text-align:center;margin-bottom:8px;}
+  .answer-input:focus{border-color:var(--pink-deep);}
+  .submit-answer-btn{width:100%;padding:12px;background:var(--pink-hot);color:var(--white);border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+  .submit-answer-btn:disabled{opacity:0.5;}
+  .submitted-badge{background:var(--pink-light);border:1px solid var(--pink-border);border-radius:10px;padding:10px;font-size:13px;color:var(--pink-deep);display:none;}
+
+  /* Timer */
+  .timer-bar-wrap{background:var(--pink-light);border-radius:99px;height:6px;margin-bottom:8px;overflow:hidden;}
+  .timer-bar-fill{height:100%;background:var(--pink-hot);border-radius:99px;transition:width 1s linear;}
+  .timer-label{font-size:12px;color:var(--text-muted);margin-bottom:10px;}
+
+  /* Chaos notification */
+  .chaos-notif{display:none;background:var(--pink-deep);border-radius:14px;padding:1.25rem;margin-bottom:1rem;animation:popIn 0.3s ease;}
+  @keyframes popIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .chaos-notif-icon{font-size:36px;margin-bottom:6px;}
+  .chaos-notif-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .chaos-notif-desc{font-size:13px;color:#F4C0D1;line-height:1.5;}
+
+  /* Leaderboard */
+  .lb{text-align:left;margin-top:1rem;}
+  .lb-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--pink-border);}
+  .lb-row:last-child{border-bottom:none;}
+  .lb-rank{font-size:12px;color:var(--text-muted);width:18px;}
+  .lb-avatar{width:30px;height:30px;border-radius:50%;background:var(--pink-light);border:1px solid var(--pink-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--pink-deep);flex-shrink:0;}
+  .lb-avatar.me{background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);}
+  .lb-name{flex:1;font-size:14px;}
+  .lb-pts{font-size:13px;font-weight:700;color:var(--pink-deep);}
 </style>
 </head>
 <body>
-
 <div class="card">
-  <!-- Join form -->
+  <!-- JOIN FORM -->
   <div id="join-form">
     <div class="diamonds">💎 ✦ 💎</div>
     <h1>Join the game</h1>
     <div class="sub">Summer 2026</div>
-    <div class="input-wrap">
-      <input type="text" id="name-input" placeholder="Your name" maxlength="20" autocomplete="off"/>
-    </div>
+    <input type="text" id="name-input" placeholder="Your name" maxlength="20" autocomplete="off"/>
     <button class="btn" id="join-btn" onclick="joinGame()">Join 💎</button>
     <div class="error" id="error-msg"></div>
   </div>
 
-  <!-- Joined state -->
-  <div class="joined-state" id="joined-state">
+  <!-- JOINED STATE -->
+  <div class="joined" id="joined-state">
     <div class="joined-icon">🎉</div>
     <div class="joined-name" id="joined-name"></div>
-    <div class="joined-sub">You're in! Watch the board and get ready.</div>
-    <div class="leaderboard">
+    <div class="joined-sub">Watch the board — answer when the timer starts!</div>
+
+    <!-- Chaos notification -->
+    <div class="chaos-notif" id="chaos-notif">
+      <div class="chaos-notif-icon" id="chaos-notif-icon"></div>
+      <div class="chaos-notif-title" id="chaos-notif-title"></div>
+      <div class="chaos-notif-desc" id="chaos-notif-desc"></div>
+    </div>
+
+    <!-- Answer zone (shown when round is active) -->
+    <div class="answer-zone" id="answer-zone">
+      <div class="timer-bar-wrap"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>
+      <div class="timer-label" id="timer-label">30 seconds</div>
+      <div class="answer-zone-label">Your answer</div>
+      <input type="text" class="answer-input" id="answer-input" placeholder="Type your answer…" maxlength="200"/>
+      <button class="submit-answer-btn" id="submit-answer-btn" onclick="submitAnswer()">Submit answer</button>
+    </div>
+    <div class="submitted-badge" id="submitted-badge">✅ Answer submitted! Waiting for host…</div>
+
+    <!-- Leaderboard -->
+    <div class="lb">
       <div class="lb-label">Leaderboard</div>
       <div id="lb-list"></div>
     </div>
@@ -145,98 +108,142 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // ── REPLACE WITH YOUR FIREBASE CONFIG ──
-  const firebaseConfig = {
-    apiKey: "AIzaSyAVXP3XwOLCnu1avcZ1owXIGsSD6Hak_wc",
-    authDomain: "juliaaaa-birthday.firebaseapp.com",
-    databaseURL: "https://juliaaaa-birthday-default-rtdb.firebaseio.com",
-    projectId: "juliaaaa-birthday",
-    storageBucket: "juliaaaa-birthday.firebasestorage.app",
-    messagingSenderId: "915123861864",
-    appId: "1:915123861864:web:6552d851e2d411a44b7edd"
-  };
-  // ───────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAVXP3XwOLCnu1avcZ1owXIGsSD6Hak_wc",
+  authDomain: "juliaaaa-birthday.firebaseapp.com",
+  databaseURL: "https://juliaaaa-birthday-default-rtdb.firebaseio.com",
+  projectId: "juliaaaa-birthday",
+  storageBucket: "juliaaaa-birthday.firebasestorage.app",
+  messagingSenderId: "915123861864",
+  appId: "1:915123861864:web:6552d851e2d411a44b7edd"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-  let myPlayerId = localStorage.getItem('julia-player-id');
-  let myName = localStorage.getItem('julia-player-name');
-  let players = {};
+let myPlayerId = localStorage.getItem('julia-player-id');
+let myName = localStorage.getItem('julia-player-name');
+let players = {};
+let roundActive = false;
+let timerInterval = null;
+let timerSecs = 30;
 
-  // Live players
-  onValue(ref(db, 'players'), snap => {
-    players = snap.exists() ? snap.val() : {};
-    if (myPlayerId && players[myPlayerId]) {
-      showJoined();
-    }
-    renderLeaderboard();
-  });
+// Live players
+onValue(ref(db,'players'), s => {
+  players = s.exists() ? s.val() : {};
+  renderLeaderboard();
+});
 
-  // Auto-rejoin if already joined
-  if (myPlayerId && myName) {
-    document.getElementById('name-input').value = myName;
+// Round active watcher
+onValue(ref(db,'round-active'), s => {
+  roundActive = s.exists() && s.val() === true;
+  if(roundActive) startAnswerTimer();
+  else stopAnswerTimer();
+});
+
+// Chaos notification watcher
+onValue(ref(db,'chaos-active'), s => {
+  if(!s.exists()) { document.getElementById('chaos-notif').style.display='none'; return; }
+  const chaos = s.val();
+  if(chaos.playerId === myPlayerId) {
+    document.getElementById('chaos-notif-icon').textContent = chaos.icon;
+    document.getElementById('chaos-notif-title').textContent = '🎉 You got the chaos power!';
+    document.getElementById('chaos-notif-desc').textContent = chaos.desc;
+    document.getElementById('chaos-notif').style.display = 'block';
+    setTimeout(()=>{ document.getElementById('chaos-notif').style.display='none'; }, 10000);
   }
+});
 
-  window.joinGame = async function() {
-    const name = document.getElementById('name-input').value.trim();
-    const err = document.getElementById('error-msg');
-    if (!name) { err.textContent = 'Enter your name first 💅'; return; }
-    if (name.length < 2) { err.textContent = 'A little longer please'; return; }
+// Auto-rejoin
+if(myPlayerId && myName) {
+  document.getElementById('name-input').value = myName;
+  showJoined();
+}
 
-    // Check name taken
-    const taken = Object.values(players).some(p => p.name.toLowerCase() === name.toLowerCase());
-    if (taken && myName?.toLowerCase() !== name.toLowerCase()) {
-      err.textContent = 'That name is taken — pick another'; return;
-    }
+window.joinGame = async function() {
+  const name = document.getElementById('name-input').value.trim();
+  const err = document.getElementById('error-msg');
+  if(!name){ err.textContent='Enter your name 💅'; return; }
+  if(name.length<2){ err.textContent='A little longer please'; return; }
+  const taken = Object.values(players).some(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(taken && myName?.toLowerCase()!==name.toLowerCase()){ err.textContent='Name taken — pick another'; return; }
+  err.textContent='';
+  document.getElementById('join-btn').disabled=true;
+  if(!myPlayerId){ const r=push(ref(db,'players')); myPlayerId=r.key; localStorage.setItem('julia-player-id',myPlayerId); }
+  myName=name; localStorage.setItem('julia-player-name',myName);
+  await set(ref(db,`players/${myPlayerId}`),{name,score:players[myPlayerId]?.score||0});
+  showJoined();
+};
 
-    err.textContent = '';
-    document.getElementById('join-btn').disabled = true;
+document.getElementById('name-input').addEventListener('keydown',e=>{ if(e.key==='Enter') window.joinGame(); });
 
-    if (!myPlayerId) {
-      const newRef = push(ref(db, 'players'));
-      myPlayerId = newRef.key;
-      localStorage.setItem('julia-player-id', myPlayerId);
-    }
-    myName = name;
-    localStorage.setItem('julia-player-name', myName);
+function showJoined() {
+  document.getElementById('join-form').style.display='none';
+  document.getElementById('joined-state').style.display='block';
+  document.getElementById('joined-name').textContent=`You're in, ${myName}! 💎`;
+  renderLeaderboard();
+}
 
-    await set(ref(db, `players/${myPlayerId}`), { name, score: players[myPlayerId]?.score || 0 });
-    showJoined();
-  };
+function startAnswerTimer() {
+  if(!myPlayerId) return;
+  timerSecs=30;
+  document.getElementById('answer-zone').style.display='block';
+  document.getElementById('submitted-badge').style.display='none';
+  document.getElementById('answer-input').value='';
+  document.getElementById('answer-input').disabled=false;
+  document.getElementById('submit-answer-btn').disabled=false;
+  updateTimerBar();
+  timerInterval=setInterval(()=>{
+    timerSecs--;
+    updateTimerBar();
+    if(timerSecs<=0){ clearInterval(timerInterval); timeUp(); }
+  },1000);
+}
 
-  // Allow pressing Enter
-  document.getElementById('name-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') window.joinGame();
-  });
+function stopAnswerTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('answer-zone').style.display='none';
+}
 
-  function showJoined() {
-    document.getElementById('join-form').style.display = 'none';
-    const js = document.getElementById('joined-state');
-    js.style.display = 'block';
-    document.getElementById('joined-name').textContent = `You're in, ${myName}! 💎`;
-    renderLeaderboard();
-  }
+function updateTimerBar() {
+  document.getElementById('timer-bar').style.width=(timerSecs/30*100)+'%';
+  document.getElementById('timer-label').textContent=timerSecs>0?`${timerSecs} seconds left`:'Time\'s up!';
+}
 
-  function renderLeaderboard() {
-    const list = Object.entries(players).sort((a,b) => b[1].score - a[1].score);
-    const el = document.getElementById('lb-list');
-    if (!el) return;
-    if (!list.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:8px 0;">No players yet</div>'; return; }
-    el.innerHTML = list.map(([id, p], i) => {
-      const isMe = id === myPlayerId;
-      const initials = p.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-      return `<div class="lb-row">
-        <span class="lb-rank">${i===0?'👑':i+1}</span>
-        <div class="lb-avatar ${isMe?'me':''}">${initials}</div>
-        <span class="lb-name">${p.name}${isMe?' (you)':''}</span>
-        <span class="lb-pts">${p.score}</span>
-      </div>`;
-    }).join('');
-  }
+function timeUp() {
+  document.getElementById('answer-input').disabled=true;
+  document.getElementById('submit-answer-btn').disabled=true;
+  document.getElementById('timer-label').textContent='Time\'s up!';
+}
+
+window.submitAnswer = async function() {
+  const answer = document.getElementById('answer-input').value.trim();
+  if(!answer||!myPlayerId) return;
+  await update(ref(db,`players/${myPlayerId}`),{roundAnswer:answer});
+  document.getElementById('answer-zone').style.display='none';
+  document.getElementById('submitted-badge').style.display='block';
+  clearInterval(timerInterval);
+};
+
+function renderLeaderboard() {
+  const list=Object.entries(players).sort((a,b)=>b[1].score-a[1].score);
+  const el=document.getElementById('lb-list');
+  if(!el) return;
+  if(!list.length){ el.innerHTML='<div style="font-size:13px;color:var(--text-muted);padding:8px 0">No players yet</div>'; return; }
+  el.innerHTML=list.map(([id,p],i)=>{
+    const isMe=id===myPlayerId;
+    const initials=p.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    return `<div class="lb-row">
+      <span class="lb-rank">${i===0?'👑':i+1}</span>
+      <div class="lb-avatar ${isMe?'me':''}">${initials}</div>
+      <span class="lb-name">${p.name}${isMe?' (you)':''}</span>
+      <span class="lb-pts">${p.score}</span>
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
