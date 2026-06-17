@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>💎 Juliaaaa's Birthday Trivia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+
+  :root {
+    --pink-bg: #FFF0F7;
+    --pink-hot: #D4537E;
+    --pink-deep: #72243E;
+    --pink-light: #FBEAF0;
+    --pink-border: #F4C0D1;
+    --diamond: #C8E8F8;
+    --diamond-border: #85B7EB;
+    --diamond-text: #0C447C;
+    --champagne: #FAC775;
+    --champagne-dark: #412402;
+    --chaos-dark: #72243E;
+    --white: #ffffff;
+    --text: #3a0f20;
+    --text-muted: #993556;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--pink-bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+  }
+  .header-diamonds { font-size: 18px; letter-spacing: 6px; margin-bottom: 6px; color: var(--pink-hot); }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    color: var(--pink-deep);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .header-sub { font-size: 13px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1rem 1rem 0.5rem;
+  }
+  .score-pill {
+    background: var(--white);
+    border: 1px solid var(--pink-border);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--pink-deep);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+  }
+  .score-pill.leader { background: var(--pink-hot); color: var(--white); border-color: var(--pink-hot); }
+  .score-pill .pts { font-weight: 600; }
+  .no-players { font-size: 13px; color: var(--text-muted); text-align: center; padding: 0.5rem; }
+
+  /* CATEGORY HEADERS */
+  .board-wrap { padding: 0.75rem 1rem 1rem; max-width: 900px; margin: 0 auto; }
+  .cat-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .cat-header {
+    background: var(--pink-hot);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: clamp(9px, 1.5vw, 12px);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.3px;
+  }
+
+  /* TILES */
+  .tile-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px; }
+
+  .tile {
+    border-radius: 12px;
+    height: clamp(54px, 8vw, 72px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(14px, 2.5vw, 20px);
+    font-weight: 700;
+    cursor: pointer;
+    border: 1.5px solid var(--pink-border);
+    background: var(--white);
+    color: var(--pink-deep);
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    perspective: 600px;
+    user-select: none;
+  }
+  .tile:hover:not(.used) { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(212,83,126,0.15); }
+  .tile.used { opacity: 0.25; cursor: default; pointer-events: none; }
+  .tile.flipping { animation: flip 0.35s ease forwards; }
+
+  @keyframes flip {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(90deg); opacity: 0.3; }
+    100% { transform: rotateY(0deg); opacity: 1; }
+  }
+
+  /* MODAL OVERLAY */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(72,10,30,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-bg.open { display: flex; }
+
+  .modal {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 520px;
+    width: 100%;
+    border: 2px solid var(--pink-border);
+    text-align: center;
+    animation: popIn 0.25s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-type {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+  }
+  .modal-icon { font-size: 48px; margin-bottom: 12px; line-height: 1; }
+  .modal-points {
+    display: inline-block;
+    background: var(--pink-hot);
+    color: var(--white);
+    border-radius: 99px;
+    padding: 4px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .modal-points.diamond { background: var(--diamond); color: var(--diamond-text); }
+  .modal-points.chaos { background: var(--chaos-dark); color: var(--white); }
+  .modal-points.drink { background: #ED93B1; color: #4B1528; }
+  .modal-points.gold { background: var(--champagne); color: var(--champagne-dark); }
+
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(18px, 3vw, 26px);
+    color: var(--pink-deep);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .modal-desc {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ANSWER REVEAL */
+  .answer-section { margin-bottom: 1.5rem; display: none; }
+  .answer-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .answer-box {
+    background: var(--pink-light);
+    border: 1.5px solid var(--pink-border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--pink-deep);
+  }
+
+  /* SCORE AWARD */
+  .award-section { margin-bottom: 1.5rem; display: none; }
+  .award-label { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+  .player-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .player-award-btn {
+    background: var(--pink-light);
+    border: 1.5px solid var(--pink-border);
+    border-radius: 99px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--pink-deep);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+  }
+  .player-award-btn:hover { background: var(--pink-hot); color: var(--white); border-color: var(--pink-hot); }
+  .player-award-btn.negative:hover { background: #A32D2D; border-color: #A32D2D; color: white; }
+
+  /* MULTIPLIER BADGE */
+  .multiplier-badge {
+    display: inline-block;
+    background: var(--diamond);
+    color: var(--diamond-text);
+    border: 1px solid var(--diamond-border);
+    border-radius: 99px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    border-radius: 99px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--pink-border);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--pink-hot); color: var(--white); border-color: var(--pink-hot); }
+  .btn-primary:hover { background: var(--pink-deep); border-color: var(--pink-deep); }
+  .btn-ghost { background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover { background: var(--pink-light); }
+
+  /* JOIN LINK banner */
+  .join-banner {
+    text-align: center;
+    padding: 0.5rem 1rem;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .join-banner a { color: var(--pink-hot); font-weight: 600; text-decoration: none; }
+  .join-banner a:hover { text-decoration: underline; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--pink-deep);
+    color: var(--white);
+    border-radius: 99px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 200;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-diamonds">💎 ✦ 💎 ✦ 💎</div>
+  <h1>Juliaaaa's Birthday Trivia</h1>
+  <div class="header-sub">Summer 2026</div>
+</div>
+
+<div class="join-banner">
+  Players join at <a id="join-url" href="join.html">join.html</a>
+</div>
+
+<div class="scoreboard" id="scoreboard">
+  <div class="no-players">Waiting for players to join…</div>
+</div>
+
+<div class="board-wrap">
+  <div class="cat-row" id="cat-row"></div>
+  <div id="board"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal">
+    <div class="modal-type" id="modal-type">Question</div>
+    <div class="modal-icon" id="modal-icon">💎</div>
+    <div id="modal-points-badge" class="modal-points">100 pts</div>
+    <div class="multiplier-badge" id="multiplier-badge" style="display:none"></div>
+    <h2 id="modal-question">Question text here</h2>
+    <div class="modal-desc" id="modal-desc"></div>
+
+    <div class="answer-section" id="answer-section">
+      <div class="answer-label">Julia's answer</div>
+      <div class="answer-box" id="answer-box"></div>
+    </div>
+
+    <div class="award-section" id="award-section">
+      <div class="award-label" id="award-label">Award points to:</div>
+      <div class="player-btns" id="player-btns"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" id="modal-action-btn" onclick="modalAction()">Reveal answer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ── REPLACE WITH YOUR FIREBASE CONFIG ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyAVXP3XwOLCnu1avcZ1owXIGsSD6Hak_wc",
+    authDomain: "juliaaaa-birthday.firebaseapp.com",
+    databaseURL: "https://juliaaaa-birthday-default-rtdb.firebaseio.com",
+    projectId: "juliaaaa-birthday",
+    storageBucket: "juliaaaa-birthday.firebasestorage.app",
+    messagingSenderId: "915123861864",
+    appId: "1:915123861864:web:6552d851e2d411a44b7edd"
+  };
+  // ───────────────────────────────────────
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // ── QUESTIONS ──
+  // Format: { q, a } — a is Julia's answer key (matched against /julia-answers in Firebase)
+  // For chaos tiles: { chaos: true, type, icon, desc }
+  const CATEGORIES = [
+    "Would Julia Rather",
+    "Julia or a Friend?",
+    "Julia's Hot Takes",
+    "Baby Julia",
+    "Global Politics"
+  ];
+
+  // 5 rows × 5 cols, row = point value (100-500), col = category
+  // true = chaos tile, false = question tile (chaos tiles distributed randomly at build time)
+  const POINTS = [100, 200, 300, 400, 500];
+
+  const QUESTIONS = [
+    // Would Julia Rather (col 0)
+    [
+      { q: "Would Julia rather spend a weekend camping in the wild with no phone, or at a luxury hotel alone with no friends?", a: "wjr_100" },
+      { q: "Would Julia rather eat the same meal every day for a year, or never eat her favorite food again?", a: "wjr_200" },
+      { q: "Would Julia rather always speak in rhymes, or always sing instead of talk?", a: "wjr_300" },
+      { q: "Would Julia rather know how she dies, or know when she dies?", a: "wjr_400" },
+      { q: "Would Julia rather have unlimited money but no friends, or be broke but surrounded by her favorite people?", a: "wjr_500" },
+    ],
+    // Julia or a Friend? (col 1)
+    [
+      { q: "Who once got lost trying to find the bathroom at a party and ended up outside — Julia or a friend?", a: "jof_100" },
+      { q: "Who cried at a commercial for a fast food chain — Julia or a friend?", a: "jof_200" },
+      { q: "Who has a Pinterest board with over 2,000 pins — Julia or a friend?", a: "jof_300" },
+      { q: "Who once texted the wrong person something extremely embarrassing and didn't realize for 20 minutes — Julia or a friend?", a: "jof_400" },
+      { q: "Who once convinced the group to take a detour that added 2 hours to a road trip — Julia or a friend?", a: "jof_500" },
+    ],
+    // Julia's Hot Takes (col 2)
+    [
+      { q: "What is Julia's hot take on pineapple on pizza?", a: "jht_100" },
+      { q: "What does Julia think about people who don't text back within an hour?", a: "jht_200" },
+      { q: "What is Julia's most controversial opinion about a popular TV show or movie?", a: "jht_300" },
+      { q: "What does Julia think is the most overrated travel destination?", a: "jht_400" },
+      { q: "What is Julia's spiciest opinion about dating in 2026?", a: "jht_500" },
+    ],
+    // Baby Julia (col 3)
+    [
+      { q: "How many siblings does Julia have?", a: "bj_100" },
+      { q: "What was Julia's first job ever?", a: "bj_200" },
+      { q: "What did young Julia want to be when she grew up?", a: "bj_300" },
+      { q: "What was Julia's most embarrassing phase growing up?", a: "bj_400" },
+      { q: "What is something Julia did as a kid that she is still not over?", a: "bj_500" },
+    ],
+    // Global Politics (col 4)
+    [
+      { q: "Which world leader does Julia think would be the most chaotic dinner guest?", a: "gp_100" },
+      { q: "If Julia were president for a day, what is the first law she would pass?", a: "gp_200" },
+      { q: "Which country does Julia think has the best approach to work-life balance?", a: "gp_300" },
+      { q: "If Julia had to explain a current geopolitical conflict using only a reality TV show analogy, which show would she pick?", a: "gp_400" },
+      { q: "What does Julia think is the most underrated country in the world?", a: "gp_500" },
+    ],
+  ];
+
+  // Chaos tile definitions — 12 total, randomly placed
+  const CHAOS_TILES = [
+    { type: "sip", icon: "🍹", title: "Sip to earn", desc: "Take a sip right now. Bank 300 points.", points: 300 },
+    { type: "sip", icon: "🍹", title: "Sip to earn", desc: "Take a sip right now. Bank 300 points.", points: 300 },
+    { type: "sip", icon: "🍹", title: "Sip to earn", desc: "Take a sip right now. Bank 300 points.", points: 300 },
+    { type: "pick", icon: "👉", title: "Pick your victim", desc: "Point at someone — they drink. You bank 200 points.", points: 200 },
+    { type: "pick", icon: "👉", title: "Pick your victim", desc: "Point at someone — they drink. You bank 200 points.", points: 200 },
+    { type: "pick", icon: "👉", title: "Pick your victim", desc: "Point at someone — they drink. You bank 200 points.", points: 200 },
+    { type: "steal", icon: "🔄", title: "Steal", desc: "Pick any player and steal 200 points from them.", points: 200 },
+    { type: "steal", icon: "🔄", title: "Steal", desc: "Pick any player and steal 200 points from them.", points: 200 },
+    { type: "sabotage", icon: "💀", title: "Sabotage", desc: "Pick someone to lose 100 points. Pure evil.", points: -100 },
+    { type: "doubledown", icon: "🎯", title: "Double down", desc: "Bet up to half your current score. Answer the next question — right doubles it, wrong loses it.", points: 0 },
+    { type: "swap", icon: "🔀", title: "Score swap", desc: "Your score swaps with the player in last place. Chaos.", points: 0 },
+    { type: "birthday", icon: "🎂", title: "Birthday girl", desc: "Julia answers this one out loud. Whoever matches her answer exactly wins 500 points.", points: 500 },
+  ];
+
+  // Hidden multipliers on point tiles: mostly 1x, some spicy
+  const MULTIPLIERS = [1,1,1,1,1,1,1,2,2,3,-1,1,1];
+
+  // Build board layout: 25 positions, 12 chaos + 13 point
+  // Chaos distributed semi-randomly but not in row 0 (100-point row stays mostly safe)
+  function buildLayout() {
+    const saved = localStorage.getItem('julia-board-layout');
+    if (saved) return JSON.parse(saved);
+
+    const positions = [];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 5; col++) {
+        positions.push({ row, col });
+      }
+    }
+
+    // Pick 12 chaos positions, avoiding all of row 0
+    const eligible = positions.filter(p => p.row > 0);
+    const shuffled = eligible.sort(() => Math.random() - 0.5);
+    const chaosPositions = new Set(shuffled.slice(0, 12).map(p => `${p.row}-${p.col}`));
+
+    let chaosIndex = 0;
+    let multIndex = 0;
+    const layout = [];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 5; col++) {
+        const key = `${row}-${col}`;
+        if (chaosPositions.has(key)) {
+          layout.push({ isChaos: true, chaos: CHAOS_TILES[chaosIndex++], row, col });
+        } else {
+          layout.push({ isChaos: false, question: QUESTIONS[col][row], points: POINTS[row], multiplier: MULTIPLIERS[multIndex++], row, col });
+        }
+      }
+    }
+    localStorage.setItem('julia-board-layout', JSON.stringify(layout));
+    return layout;
+  }
+
+  const layout = buildLayout();
+  let juliaAnswers = {};
+  let players = {};
+  let currentTile = null;
+  let modalStep = 'reveal'; // 'reveal' | 'award'
+
+  // Load Julia's answers
+  get(ref(db, 'julia-answers')).then(snap => {
+    if (snap.exists()) juliaAnswers = snap.val();
+  });
+
+  // Live scoreboard
+  onValue(ref(db, 'players'), snap => {
+    players = snap.exists() ? snap.val() : {};
+    renderScoreboard();
+  });
+
+  function renderScoreboard() {
+    const el = document.getElementById('scoreboard');
+    const list = Object.values(players).sort((a,b) => b.score - a.score);
+    if (!list.length) {
+      el.innerHTML = '<div class="no-players">Waiting for players to join…</div>';
+      return;
+    }
+    el.innerHTML = list.map((p,i) =>
+      `<div class="score-pill ${i===0?'leader':''}">
+        ${i===0?'👑 ':''}${p.name} <span class="pts">${p.score}</span>
+      </div>`
+    ).join('');
+  }
+
+  // Build board
+  function renderBoard() {
+    // Category headers
+    const catRow = document.getElementById('cat-row');
+    catRow.innerHTML = CATEGORIES.map(c => `<div class="cat-header">${c}</div>`).join('');
+
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+
+    for (let row = 0; row < 5; row++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'tile-row';
+      for (let col = 0; col < 5; col++) {
+        const tile = layout.find(t => t.row === row && t.col === col);
+        const idx = row * 5 + col;
+        const used = localStorage.getItem(`tile-used-${idx}`);
+        const el = document.createElement('div');
+        el.className = 'tile' + (used ? ' used' : '');
+        el.dataset.idx = idx;
+        el.textContent = used ? '✓' : POINTS[row];
+        el.onclick = () => flipTile(idx, tile, el);
+        rowEl.appendChild(el);
+      }
+      board.appendChild(rowEl);
+    }
+  }
+
+  function flipTile(idx, tile, el) {
+    if (el.classList.contains('used')) return;
+    el.classList.add('flipping');
+    setTimeout(() => {
+      el.classList.remove('flipping');
+      openModal(idx, tile, el);
+    }, 350);
+  }
+
+  function openModal(idx, tile, el) {
+    currentTile = { idx, tile, el };
+    modalStep = 'reveal';
+
+    const bg = document.getElementById('modal-bg');
+    const typeEl = document.getElementById('modal-type');
+    const iconEl = document.getElementById('modal-icon');
+    const pointsBadge = document.getElementById('modal-points-badge');
+    const multBadge = document.getElementById('multiplier-badge');
+    const questionEl = document.getElementById('modal-question');
+    const descEl = document.getElementById('modal-desc');
+    const answerSection = document.getElementById('answer-section');
+    const awardSection = document.getElementById('award-section');
+    const actionBtn = document.getElementById('modal-action-btn');
+
+    answerSection.style.display = 'none';
+    awardSection.style.display = 'none';
+    multBadge.style.display = 'none';
+
+    if (tile.isChaos) {
+      typeEl.textContent = 'Chaos tile';
+      iconEl.textContent = tile.chaos.icon;
+      pointsBadge.className = 'modal-points ' + (tile.chaos.type.includes('sip') || tile.chaos.type.includes('pick') ? 'drink' : 'chaos');
+      pointsBadge.textContent = tile.chaos.points > 0 ? `+${tile.chaos.points} pts` : tile.chaos.points < 0 ? `${tile.chaos.points} pts` : 'No points';
+      questionEl.textContent = tile.chaos.title;
+      descEl.textContent = tile.chaos.desc;
+
+      if (tile.chaos.type === 'steal' || tile.chaos.type === 'sabotage' || tile.chaos.type === 'sip' || tile.chaos.type === 'pick' || tile.chaos.type === 'birthday') {
+        actionBtn.textContent = 'Award points';
+        modalStep = 'award-chaos';
+      } else {
+        actionBtn.textContent = 'Got it — close';
+        modalStep = 'close';
+      }
+    } else {
+      const mult = tile.multiplier;
+      const finalPts = tile.points * (mult < 0 ? -1 : mult);
+      typeEl.textContent = 'Trivia';
+      iconEl.textContent = '💎';
+      pointsBadge.className = 'modal-points' + (mult > 1 ? ' diamond' : mult < 0 ? ' chaos' : '');
+      pointsBadge.textContent = mult !== 1 ? `${mult > 0 ? mult+'× ' : ''}${finalPts > 0 ? '+' : ''}${finalPts} pts` : `+${tile.points} pts`;
+
+      if (mult !== 1) {
+        multBadge.style.display = 'inline-block';
+        multBadge.textContent = mult > 0 ? `💎 ${mult}× multiplier!` : `💀 Negative round`;
+      }
+
+      questionEl.textContent = tile.question.q;
+      descEl.textContent = '';
+      actionBtn.textContent = 'Reveal Julia\'s answer';
+      modalStep = 'reveal';
+    }
+
+    bg.classList.add('open');
+  }
+
+  window.modalAction = function() {
+    const { idx, tile } = currentTile;
+
+    if (modalStep === 'reveal') {
+      const answerKey = tile.question.a;
+      const answer = juliaAnswers[answerKey] || '(Julia hasn\'t answered yet)';
+      document.getElementById('answer-box').textContent = answer;
+      document.getElementById('answer-section').style.display = 'block';
+      showAwardSection(tile.points * tile.multiplier, false);
+      document.getElementById('modal-action-btn').textContent = 'Award & close';
+      modalStep = 'award';
+
+    } else if (modalStep === 'award' || modalStep === 'award-chaos') {
+      markUsed(idx);
+      closeModal();
+
+    } else if (modalStep === 'close') {
+      markUsed(idx);
+      closeModal();
+    }
+  };
+
+  function showAwardSection(pts, isNegative) {
+    const section = document.getElementById('award-section');
+    const label = document.getElementById('award-label');
+    const btns = document.getElementById('player-btns');
+    const list = Object.entries(players).sort((a,b) => b[1].score - a[1].score);
+
+    if (!list.length) return;
+    section.style.display = 'block';
+    label.textContent = pts >= 0 ? 'Award points to:' : 'Deduct points from:';
+
+    btns.innerHTML = list.map(([id, p]) =>
+      `<button class="player-award-btn ${pts < 0 ? 'negative' : ''}" onclick="awardPlayer('${id}', ${pts})">
+        ${p.name}
+      </button>`
+    ).join('');
+  }
+
+  window.awardPlayer = function(playerId, pts) {
+    const p = players[playerId];
+    if (!p) return;
+    const newScore = Math.max(0, (p.score || 0) + pts);
+    update(ref(db, `players/${playerId}`), { score: newScore });
+    showToast(`${pts >= 0 ? '+' : ''}${pts} pts → ${p.name}`);
+    document.getElementById('player-btns').querySelectorAll('button').forEach(b => b.disabled = true);
+  };
+
+  function markUsed(idx) {
+    localStorage.setItem(`tile-used-${idx}`, '1');
+    const el = document.querySelector(`[data-idx="${idx}"]`);
+    if (el) { el.classList.add('used'); el.textContent = '✓'; }
+  }
+
+  window.closeModal = function() {
+    document.getElementById('modal-bg').classList.remove('open');
+    currentTile = null;
+  };
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Set join URL
+  const joinUrl = window.location.href.replace('index.html', '').replace(/\/$/, '') + '/join.html';
+  document.getElementById('join-url').href = 'join.html';
+  document.getElementById('join-url').textContent = joinUrl;
+
+  renderBoard();
+</script>
+</body>
+</html>
