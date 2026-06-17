@@ -251,18 +251,37 @@ const CHAOS_TILES = [
 const MULTIPLIERS = [1,1,1,1,1,1,1,2,2,3,-1,1,1];
 
 function buildLayout() {
+  // Force rebuild if old layout doesn't have question on chaos tiles
   const saved = localStorage.getItem('julia-board-layout');
-  if (saved) return JSON.parse(saved);
-  const eligible = [];
-  for(let r=1;r<5;r++) for(let c=0;c<5;c++) eligible.push({row:r,col:c});
-  const chaos = new Set(eligible.sort(()=>Math.random()-0.5).slice(0,12).map(p=>`${p.row}-${p.col}`));
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    const chaosWithoutQ = parsed.find(t => t.isChaos && !t.question);
+    if (!chaosWithoutQ) return parsed;
+    localStorage.removeItem('julia-board-layout'); // stale — rebuild
+  }
+
+  // Build all 25 question slots: col=category, row=point level
+  const allSlots = [];
+  for(let r=0;r<5;r++) for(let c=0;c<5;c++) allSlots.push({row:r,col:c});
+
+  // Pick 12 chaos positions (avoid row 0 so 100-pt row is always safe)
+  const eligible = allSlots.filter(p=>p.row>0);
+  const chaosPositions = new Set(
+    eligible.sort(()=>Math.random()-0.5).slice(0,12).map(p=>`${p.row}-${p.col}`)
+  );
+
   let ci=0, mi=0;
   const layout=[];
   for(let r=0;r<5;r++) for(let c=0;c<5;c++) {
     const key=`${r}-${c}`;
-    layout.push(chaos.has(key)
-      ? {isChaos:true,chaos:CHAOS_TILES[ci++],row:r,col:c}
-      : {isChaos:false,question:QUESTIONS[c][r],points:POINTS[r],multiplier:MULTIPLIERS[mi++],row:r,col:c});
+    const question = QUESTIONS[c][r]; // always assign the question
+    const points = POINTS[r];
+    if(chaosPositions.has(key)) {
+      // Chaos tile: still has a trivia question + a hidden chaos bonus
+      layout.push({isChaos:true, chaos:CHAOS_TILES[ci++], question, points, row:r, col:c});
+    } else {
+      layout.push({isChaos:false, question, points, multiplier:MULTIPLIERS[mi++], row:r, col:c});
+    }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
   return layout;
@@ -326,16 +345,14 @@ function openModal(idx,tile,el) {
   remove(ref(db,'round-answers'));
   set(ref(db,'round-active'),true);
 
-  const pts = tile.isChaos ? tile.chaos.bonus : tile.points*(tile.multiplier||1);
+  const pts = tile.isChaos ? tile.points : tile.points*(tile.multiplier||1);
   const badge = document.getElementById('modal-points-badge');
-  badge.className='modal-points-badge'+(tile.multiplier>1?' diamond':tile.multiplier<0?' negative':'');
-  badge.textContent = tile.isChaos ? `💎 ${tile.points||tile.chaos.bonus} pts + chaos` : `${pts>0?'+':''}${pts} pts`;
+  badge.className='modal-points-badge'+((!tile.isChaos && tile.multiplier>1)?' diamond':(!tile.isChaos && tile.multiplier<0)?' negative':'');
+  badge.textContent = tile.isChaos ? `${pts} pts + 🎲 chaos hidden` : `${pts>0?'+':''}${pts} pts`;
 
-  document.getElementById('modal-type').textContent = tile.isChaos?'Question + Chaos':'Trivia';
-  document.getElementById('modal-question').textContent = tile.isChaos?tile.chaos.title+' hidden…':tile.question.q;
-
-  // Show the actual question text for chaos tiles too
-  if(tile.isChaos) document.getElementById('modal-question').textContent = tile.question ? tile.question.q : tile.chaos.title;
+  document.getElementById('modal-type').textContent = tile.isChaos ? 'Question + Hidden Chaos' : 'Trivia';
+  // Always show the trivia question — chaos is revealed AFTER answering
+  document.getElementById('modal-question').textContent = tile.question?.q || '(question missing)';
 
   document.getElementById('timer-wrap').style.display='block';
   document.getElementById('julia-answer-wrap').style.display='none';
