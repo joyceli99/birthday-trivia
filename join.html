@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>💎 Join Juliaaaa's Trivia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+
+  :root {
+    --pink-bg: #FFF0F7;
+    --pink-hot: #D4537E;
+    --pink-deep: #72243E;
+    --pink-light: #FBEAF0;
+    --pink-border: #F4C0D1;
+    --white: #ffffff;
+    --text: #3a0f20;
+    --text-muted: #993556;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--pink-bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1.5px solid var(--pink-border);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .diamonds { font-size: 20px; letter-spacing: 6px; margin-bottom: 12px; }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: var(--pink-deep);
+    margin-bottom: 6px;
+  }
+  .sub { font-size: 13px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2rem; }
+
+  .input-wrap { margin-bottom: 1rem; }
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1.5px solid var(--pink-border);
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--pink-bg);
+    outline: none;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]::placeholder { color: var(--text-muted); opacity: 0.7; }
+  input[type="text"]:focus { border-color: var(--pink-hot); }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--pink-hot);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn:hover { background: var(--pink-deep); }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+
+  .error { font-size: 13px; color: #A32D2D; margin-top: 8px; min-height: 18px; }
+
+  /* Joined state */
+  .joined-state { display: none; }
+  .joined-icon { font-size: 48px; margin-bottom: 12px; }
+  .joined-name { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--pink-deep); margin-bottom: 6px; }
+  .joined-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; }
+
+  .leaderboard { text-align: left; }
+  .lb-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--pink-border);
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-size: 12px; color: var(--text-muted); width: 18px; }
+  .lb-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--pink-light);
+    border: 1px solid var(--pink-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: var(--pink-deep);
+    flex-shrink: 0;
+  }
+  .lb-avatar.me { background: var(--pink-hot); color: var(--white); border-color: var(--pink-hot); }
+  .lb-name { flex: 1; font-size: 14px; color: var(--text); }
+  .lb-pts { font-size: 13px; font-weight: 600; color: var(--pink-deep); }
+  .lb-crown { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Join form -->
+  <div id="join-form">
+    <div class="diamonds">💎 ✦ 💎</div>
+    <h1>Join the game</h1>
+    <div class="sub">Summer 2026</div>
+    <div class="input-wrap">
+      <input type="text" id="name-input" placeholder="Your name" maxlength="20" autocomplete="off"/>
+    </div>
+    <button class="btn" id="join-btn" onclick="joinGame()">Join 💎</button>
+    <div class="error" id="error-msg"></div>
+  </div>
+
+  <!-- Joined state -->
+  <div class="joined-state" id="joined-state">
+    <div class="joined-icon">🎉</div>
+    <div class="joined-name" id="joined-name"></div>
+    <div class="joined-sub">You're in! Watch the board and get ready.</div>
+    <div class="leaderboard">
+      <div class="lb-label">Leaderboard</div>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ── REPLACE WITH YOUR FIREBASE CONFIG ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyAVXP3XwOLCnu1avcZ1owXIGsSD6Hak_wc",
+    authDomain: "juliaaaa-birthday.firebaseapp.com",
+    databaseURL: "https://juliaaaa-birthday-default-rtdb.firebaseio.com",
+    projectId: "juliaaaa-birthday",
+    storageBucket: "juliaaaa-birthday.firebasestorage.app",
+    messagingSenderId: "915123861864",
+    appId: "1:915123861864:web:6552d851e2d411a44b7edd"
+  };
+  // ───────────────────────────────────────
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let myPlayerId = localStorage.getItem('julia-player-id');
+  let myName = localStorage.getItem('julia-player-name');
+  let players = {};
+
+  // Live players
+  onValue(ref(db, 'players'), snap => {
+    players = snap.exists() ? snap.val() : {};
+    if (myPlayerId && players[myPlayerId]) {
+      showJoined();
+    }
+    renderLeaderboard();
+  });
+
+  // Auto-rejoin if already joined
+  if (myPlayerId && myName) {
+    document.getElementById('name-input').value = myName;
+  }
+
+  window.joinGame = async function() {
+    const name = document.getElementById('name-input').value.trim();
+    const err = document.getElementById('error-msg');
+    if (!name) { err.textContent = 'Enter your name first 💅'; return; }
+    if (name.length < 2) { err.textContent = 'A little longer please'; return; }
+
+    // Check name taken
+    const taken = Object.values(players).some(p => p.name.toLowerCase() === name.toLowerCase());
+    if (taken && myName?.toLowerCase() !== name.toLowerCase()) {
+      err.textContent = 'That name is taken — pick another'; return;
+    }
+
+    err.textContent = '';
+    document.getElementById('join-btn').disabled = true;
+
+    if (!myPlayerId) {
+      const newRef = push(ref(db, 'players'));
+      myPlayerId = newRef.key;
+      localStorage.setItem('julia-player-id', myPlayerId);
+    }
+    myName = name;
+    localStorage.setItem('julia-player-name', myName);
+
+    await set(ref(db, `players/${myPlayerId}`), { name, score: players[myPlayerId]?.score || 0 });
+    showJoined();
+  };
+
+  // Allow pressing Enter
+  document.getElementById('name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.joinGame();
+  });
+
+  function showJoined() {
+    document.getElementById('join-form').style.display = 'none';
+    const js = document.getElementById('joined-state');
+    js.style.display = 'block';
+    document.getElementById('joined-name').textContent = `You're in, ${myName}! 💎`;
+    renderLeaderboard();
+  }
+
+  function renderLeaderboard() {
+    const list = Object.entries(players).sort((a,b) => b[1].score - a[1].score);
+    const el = document.getElementById('lb-list');
+    if (!el) return;
+    if (!list.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:8px 0;">No players yet</div>'; return; }
+    el.innerHTML = list.map(([id, p], i) => {
+      const isMe = id === myPlayerId;
+      const initials = p.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      return `<div class="lb-row">
+        <span class="lb-rank">${i===0?'👑':i+1}</span>
+        <div class="lb-avatar ${isMe?'me':''}">${initials}</div>
+        <span class="lb-name">${p.name}${isMe?' (you)':''}</span>
+        <span class="lb-pts">${p.score}</span>
+      </div>`;
+    }).join('');
+  }
+</script>
+</body>
+</html>
