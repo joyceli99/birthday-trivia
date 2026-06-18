@@ -563,8 +563,8 @@ function showChaosWinnerSelect(chaos) {
         style="${sel ? 'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);' : ''}"
         onclick="toggleChaosSelect('${pid}')">${players[pid]?.name}${sel ? ' ✅' : ''}</button>`;
     }).join('');
-    btns.innerHTML += `<button class="chaos-winner-btn"
-      style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
+    btns.innerHTML += `<button class="btn btn-confirm"
+      style="margin-top:8px;background:#2D7A3A;color:#fff;border:1.5px solid #2D7A3A;border-radius:99px;padding:10px 24px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;"
       onclick="confirmChaosSelect()">✅ Confirm selection</button>`;
   };
   render();
@@ -616,8 +616,8 @@ async function executeChaosForAll(winnerIds, chaos) {
             style="${confirmed ? 'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);' : ''}"
             onclick="toggleSipConfirm('${pid}')">${players[pid]?.name}${confirmed ? ' ✅ sipped' : ' — tap to confirm'}</button>`;
         }).join('');
-        btns.innerHTML += `<button class="chaos-winner-btn"
-          style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
+        btns.innerHTML += `<button
+          style="margin-top:8px;background:#2D7A3A;color:#fff;border:1.5px solid #2D7A3A;border-radius:99px;padding:10px 24px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;"
           onclick="finalizeSips(${chaos.bonus})">✅ Award sip points</button>`;
       };
       render();
