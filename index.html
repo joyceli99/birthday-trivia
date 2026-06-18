@@ -510,11 +510,15 @@ async function executeChaos(winnerId, chaos) {
   switch(chaos.type) {
 
     case 'sip':
-      // Winner sips and gets bonus points
-      await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(winner.score||0)+chaos.bonus)});
-      showToast(`${winner.name} sips and banks +${chaos.bonus} bonus pts 🍹`);
-      document.getElementById('modal-action-btn').textContent = 'Close';
-      modalStep = 'done';
+      // Show a confirm button — host taps once player has visibly sipped
+      document.getElementById('chaos-winner-label').textContent = `${winner.name} needs to take a sip 🍹`;
+      document.getElementById('chaos-winner-btns').innerHTML =
+        `<button class="chaos-winner-btn" onclick="confirmSip('${winnerId}', ${chaos.bonus})">
+          ✅ Confirm ${winner.name} sipped — bank +${chaos.bonus} pts
+        </button>`;
+      document.getElementById('chaos-winner-wrap').style.display = 'block';
+      document.getElementById('modal-action-btn').disabled = true;
+      modalStep = 'chaos-pick';
       break;
 
     case 'pick':
@@ -632,6 +636,15 @@ function hidePicker() {
   document.getElementById('modal-action-btn').disabled = false;
   window._chaosPickCallback = null;
 }
+
+window.confirmSip = async function(winnerId, bonus) {
+  const winner = players[winnerId];
+  await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(winner?.score||0)+bonus)});
+  showToast(`${winner?.name} sipped! +${bonus} pts banked 🍹`);
+  hidePicker();
+  document.getElementById('modal-action-btn').textContent = 'Close';
+  modalStep = 'done';
+};
 
 function markUsed(idx) {
   localStorage.setItem(`tile-used-${idx}`,'1');
