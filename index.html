@@ -521,23 +521,24 @@ async function awardSelectedWinners() {
 // Fullscreen chaos overlay — shows for 2.5s then transitions to power selection
 function showChaosOverlay(chaos) {
   const overlay = document.getElementById('chaos-overlay');
-  // Hide the modal while overlay is showing
-  document.getElementById('modal').style.opacity = '0';
+  const modalBg = document.getElementById('modal-bg');
+  // Close the modal bg temporarily — overlay sits on top of everything
+  modalBg.classList.remove('open');
   overlay.classList.add('show');
   setTimeout(() => {
     overlay.classList.remove('show');
-    document.getElementById('modal').style.opacity = '1';
-    // Now show the simplified chaos power selection
-    // Hide all non-essential modal sections
+    // Reopen modal with simplified chaos-only UI
+    modalBg.classList.add('open');
+    document.getElementById('timer-wrap').style.display = 'none';
     document.getElementById('julia-answer-wrap').style.display = 'none';
     document.getElementById('answers-section').style.display = 'none';
     document.getElementById('chaos-reveal').style.display = 'none';
-    document.getElementById('modal-type').textContent = 'Chaos tile';
+    document.getElementById('modal-type').textContent = '🎲 Chaos tile';
     document.getElementById('modal-question').textContent = `${chaos.icon} ${chaos.title}`;
     document.getElementById('modal-points-badge').textContent = chaos.desc;
-    document.getElementById('modal-points-badge').style.cssText = 'background:var(--pink-deep);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;display:block;margin-bottom:14px;line-height:1.5;';
+    document.getElementById('modal-points-badge').style.cssText = 'background:var(--pink-deep);color:#fff;border-radius:10px;padding:8px 16px;font-size:13px;display:block;margin-bottom:14px;line-height:1.6;white-space:normal;';
     showChaosWinnerSelect(chaos);
-  }, 2500);
+  }, 2800);
 }
 
 // Show multi-select checklist of winners — host picks who gets chaos power, then confirms
@@ -546,8 +547,9 @@ function showChaosWinnerSelect(chaos) {
   const lbl = document.getElementById('chaos-winner-label');
   const btns = document.getElementById('chaos-winner-btns');
   const actionBtn = document.getElementById('modal-action-btn');
+  // Hide the footer button entirely — "Confirm selection" inside the picker is the only action
+  actionBtn.style.display = 'none';
   wrap.style.display = 'block';
-  actionBtn.disabled = true;
   modalStep = 'chaos-pick';
   window._chaosSelected = new Set();
   window._chaosType = chaos;
@@ -582,6 +584,7 @@ window.confirmChaosSelect = async function() {
   window._renderChaosSelect = null;
   window._chaosType = null;
   hidePicker();
+  document.getElementById('modal-action-btn').style.display = '';
   if(!chosenWinners.length) {
     showToast('No one selected — skipping chaos');
     document.getElementById('modal-action-btn').textContent = 'Close';
@@ -824,7 +827,9 @@ function renderPlayerPicker(label, playerEntries, onPick) {
 window.chaosPickTarget = function(pid) { if(window._chaosPickCallback) window._chaosPickCallback(pid); };
 function hidePicker() {
   document.getElementById('chaos-winner-wrap').style.display = 'none';
-  document.getElementById('modal-action-btn').disabled = false;
+  const btn = document.getElementById('modal-action-btn');
+  btn.style.display = '';
+  btn.disabled = false;
   window._chaosPickCallback = null;
 }
 
