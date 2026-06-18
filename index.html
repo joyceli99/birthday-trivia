@@ -502,7 +502,6 @@ window.pickChaosWinner = async function(pid) {
 async function executeChaos(winnerId, chaos) {
   const winner = players[winnerId];
   const playerList = Object.entries(players).sort((a,b) => b[1].score - a[1].score);
-  const sorted = playerList; // descending by score
 
   // Notify the winner's phone
   await set(ref(db,'chaos-active'), {playerId:winnerId, playerName:winner?.name, ...chaos, ts:Date.now()});
@@ -510,26 +509,13 @@ async function executeChaos(winnerId, chaos) {
   switch(chaos.type) {
 
     case 'sip':
-      // Show a confirm button — host taps once player has visibly sipped
-      document.getElementById('chaos-winner-label').textContent = `${winner.name} needs to take a sip 🍹`;
-      document.getElementById('chaos-winner-btns').innerHTML =
-        `<button class="chaos-winner-btn" onclick="confirmSip('${winnerId}', ${chaos.bonus})">
-          ✅ Confirm ${winner.name} sipped — bank +${chaos.bonus} pts
-        </button>`;
-      document.getElementById('chaos-winner-wrap').style.display = 'block';
-      document.getElementById('modal-action-btn').disabled = true;
-      modalStep = 'chaos-pick';
-      break;
-
-    case 'pick':
-      // Winner picks someone to drink — show a player picker
-      showToast(`${winner.name} picks who drinks 👉`);
-      renderPlayerPicker(
-        `${winner.name} picks who drinks:`,
-        playerList.filter(([pid])=>pid!==winnerId),
-        async (targetId) => {
-          await update(ref(db,`players/${winnerId}`),{score:Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
-          showToast(`${players[targetId]?.name} drinks 🍹 ${winner.name} gets +${chaos.bonus} pts`);
+      // Step 1: show mission. Step 2: host confirms player sipped → points awarded.
+      showConfirmBtn(
+        `🍹 ${winner.name} must take a sip`,
+        `✅ Confirm ${winner.name} sipped`,
+        async () => {
+          await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
+          showToast(`${winner.name} sipped! +${chaos.bonus} pts banked 🍹`);
           hidePicker();
           document.getElementById('modal-action-btn').textContent = 'Close';
           modalStep = 'done';
@@ -537,18 +523,40 @@ async function executeChaos(winnerId, chaos) {
       );
       break;
 
-    case 'steal':
-      // Winner picks someone to steal 200 pts from
-      showToast(`${winner.name} is stealing 200 pts 🔄`);
+    case 'pick':
+      // Step 1: winner picks victim. Step 2: host confirms victim drank → winner gets bonus pts.
       renderPlayerPicker(
-        `${winner.name} steals 200 pts from:`,
-        playerList.filter(([pid])=>pid!==winnerId),
+        `👉 ${winner.name} picks who drinks:`,
+        playerList.filter(([pid]) => pid !== winnerId),
+        async (targetId) => {
+          const targetName = players[targetId]?.name;
+          // Replace picker with confirm button
+          showConfirmBtn(
+            `🍹 ${targetName} must drink`,
+            `✅ Confirm ${targetName} drank`,
+            async () => {
+              await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
+              showToast(`${targetName} drank! ${winner.name} gets +${chaos.bonus} pts 👉`);
+              hidePicker();
+              document.getElementById('modal-action-btn').textContent = 'Close';
+              modalStep = 'done';
+            }
+          );
+        }
+      );
+      break;
+
+    case 'steal':
+      // Winner picks victim → points transfer automatically
+      renderPlayerPicker(
+        `🔄 ${winner.name} steals 200 pts from:`,
+        playerList.filter(([pid]) => pid !== winnerId),
         async (targetId) => {
           const target = players[targetId];
           const stolen = Math.min(200, target.score||0);
-          await update(ref(db,`players/${targetId}`),{score:Math.max(0,(target.score||0)-stolen)});
-          await update(ref(db,`players/${winnerId}`),{score:Math.max(0,(players[winnerId]?.score||0)+stolen)});
-          showToast(`${winner.name} stole ${stolen} pts from ${target.name}!`);
+          await update(ref(db,`players/${targetId}`), {score: Math.max(0,(target.score||0)-stolen)});
+          await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+stolen)});
+          showToast(`${winner.name} stole ${stolen} pts from ${target.name}! 🔄`);
           hidePicker();
           document.getElementById('modal-action-btn').textContent = 'Close';
           modalStep = 'done';
@@ -557,14 +565,13 @@ async function executeChaos(winnerId, chaos) {
       break;
 
     case 'sabotage':
-      // Winner picks someone to lose 200 pts
-      showToast(`${winner.name} picks someone to sabotage 💀`);
+      // Winner picks victim → 200 pts deducted automatically
       renderPlayerPicker(
-        `${winner.name} sabotages (−200 pts):`,
-        playerList.filter(([pid])=>pid!==winnerId),
+        `💀 ${winner.name} sabotages (−200 pts):`,
+        playerList.filter(([pid]) => pid !== winnerId),
         async (targetId) => {
           const target = players[targetId];
-          await update(ref(db,`players/${targetId}`),{score:Math.max(0,(target.score||0)-200)});
+          await update(ref(db,`players/${targetId}`), {score: Math.max(0,(target.score||0)-200)});
           showToast(`${target.name} loses 200 pts 💀`);
           hidePicker();
           document.getElementById('modal-action-btn').textContent = 'Close';
@@ -573,38 +580,39 @@ async function executeChaos(winnerId, chaos) {
       );
       break;
 
-    case 'doubledown':
-      // Double the winner's points for this tile
+    case 'doubledown': {
+      // Auto: winner's tile points doubled (awarded a second time)
       const tile = currentTile.tile;
-      const bonusPts = tile.points * (tile.multiplier||1); // already awarded once, add again
-      await update(ref(db,`players/${winnerId}`),{score:Math.max(0,(players[winnerId]?.score||0)+bonusPts)});
+      const bonusPts = tile.points * (tile.multiplier||1);
+      await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+bonusPts)});
       showToast(`${winner.name}'s points doubled! +${bonusPts} bonus 🎯`);
       document.getElementById('modal-action-btn').textContent = 'Close';
       modalStep = 'done';
       break;
+    }
 
-    case 'swap':
-      // Swap winner's score with last place
-      if(sorted.length < 2) { showToast('Not enough players to swap!'); modalStep='done'; break; }
-      const lastEntry = sorted[sorted.length-1];
-      const lastId = lastEntry[0];
+    case 'swap': {
+      // Auto: winner swaps score with last place
+      if(playerList.length < 2) { showToast('Not enough players to swap!'); document.getElementById('modal-action-btn').textContent='Close'; modalStep='done'; break; }
+      const lastId = playerList[playerList.length-1][0];
       if(lastId === winnerId) {
-        showToast(`${winner.name} is already last — no swap needed 😅`);
+        showToast(`${winner.name} is already last — no swap! 😅`);
       } else {
         const lastScore = players[lastId]?.score||0;
         const winnerScore = players[winnerId]?.score||0;
-        await update(ref(db,`players/${winnerId}`),{score:lastScore});
-        await update(ref(db,`players/${lastId}`),{score:winnerScore});
+        await update(ref(db,`players/${winnerId}`), {score: lastScore});
+        await update(ref(db,`players/${lastId}`), {score: winnerScore});
         showToast(`${winner.name} swapped scores with ${players[lastId]?.name} 🔀`);
       }
       document.getElementById('modal-action-btn').textContent = 'Close';
       modalStep = 'done';
       break;
+    }
 
     case 'birthday':
-      // Everyone who answered correctly gets 500 bonus
+      // Auto: all winners get +500 bonus
       for(const pid of selectedWinners) {
-        await update(ref(db,`players/${pid}`),{score:Math.max(0,(players[pid]?.score||0)+500)});
+        await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+500)});
       }
       showToast(`🎂 All winners get +500 birthday bonus pts!`);
       document.getElementById('modal-action-btn').textContent = 'Close';
@@ -616,6 +624,22 @@ async function executeChaos(winnerId, chaos) {
       modalStep = 'done';
   }
 }
+
+// Show a single confirm button (for sip / pick victim drink confirmation)
+function showConfirmBtn(label, btnText, onConfirm) {
+  const wrap = document.getElementById('chaos-winner-wrap');
+  const lbl = document.getElementById('chaos-winner-label');
+  const btns = document.getElementById('chaos-winner-btns');
+  if(!wrap||!lbl||!btns) return;
+  lbl.textContent = label;
+  btns.innerHTML = `<button class="chaos-winner-btn" style="background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);" onclick="chaosConfirmAction()">${btnText}</button>`;
+  wrap.style.display = 'block';
+  document.getElementById('modal-action-btn').disabled = true;
+  modalStep = 'chaos-pick';
+  window._chaosConfirmCallback = onConfirm;
+}
+
+window.chaosConfirmAction = function() { if(window._chaosConfirmCallback) window._chaosConfirmCallback(); };
 
 // Player picker UI (rendered inside chaos-winner-wrap)
 function renderPlayerPicker(label, playerEntries, onPick) {
