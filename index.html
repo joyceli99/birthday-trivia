@@ -494,8 +494,9 @@ async function awardSelectedWinners() {
 }
 
 window.pickChaosWinner = async function(pid) {
-  document.getElementById('chaos-winner-wrap').style.display = 'none';
-  document.getElementById('modal-action-btn').disabled = false;
+  // Clear the winner-picker but keep action btn disabled — executeChaos will manage it
+  const wrap = document.getElementById('chaos-winner-wrap');
+  if(wrap) wrap.style.display = 'none';
   await executeChaos(pid, currentTile.tile.chaos);
 };
 
