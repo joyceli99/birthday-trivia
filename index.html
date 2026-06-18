@@ -516,21 +516,22 @@ async function executeChaos(winnerId, chaos) {
       const lbl = document.getElementById('chaos-winner-label');
       const btns = document.getElementById('chaos-winner-btns');
       const actionBtn = document.getElementById('modal-action-btn');
+      // Make wrap visible FIRST before touching child elements
+      wrap.style.display = 'block';
+      actionBtn.disabled = true;
+      modalStep = 'chaos-pick';
       lbl.textContent = '🍹 Who sipped? Tap to select, then confirm.';
       const renderSipList = () => {
         btns.innerHTML = [...selectedWinners].map(pid => {
           const sel = sipWinners.has(pid);
-          return `<button class="chaos-winner-btn ${sel?'selected-sip':''}"
+          return `<button class="chaos-winner-btn"
             style="${sel?'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);':''}"
-            onclick="toggleSipWinner('${pid}', ${chaos.bonus})">${players[pid]?.name} ${sel?'✅':''}</button>`;
+            onclick="toggleSipWinner('${pid}')">${players[pid]?.name} ${sel?'✅':''}</button>`;
         }).join('');
         btns.innerHTML += `<button class="chaos-winner-btn" style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
-          onclick="confirmSipAll(${chaos.bonus})">Confirm sips & award points</button>`;
+          onclick="confirmSipAll(${chaos.bonus})">✅ Confirm sips & award +${chaos.bonus} pts</button>`;
       };
       renderSipList();
-      wrap.style.display = 'block';
-      actionBtn.disabled = true;
-      modalStep = 'chaos-pick';
       window._sipWinners = sipWinners;
       window._renderSipList = renderSipList;
       break;
