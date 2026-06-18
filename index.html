@@ -242,7 +242,7 @@ const CHAOS_TILES = [
   {type:"pick",icon:"👉",title:"Pick your victim",desc:"Winner picks someone — they drink. Winner gets +200 bonus points.",bonus:200},
   {type:"steal",icon:"🔄",title:"Steal",desc:"Winner steals 200 points from any player of their choice.",bonus:0},
   {type:"steal",icon:"🔄",title:"Steal",desc:"Winner steals 200 points from any player of their choice.",bonus:0},
-  {type:"sabotage",icon:"💀",title:"Sabotage",desc:"Winner picks someone to lose 100 points.",bonus:0},
+  {type:"sabotage",icon:"💀",title:"Sabotage",desc:"Winner picks someone to lose 200 points.",bonus:0},
   {type:"doubledown",icon:"🎯",title:"Double down",desc:"Winner's points are doubled for this tile.",bonus:0},
   {type:"swap",icon:"🔀",title:"Score swap",desc:"Winner swaps scores with the player in last place.",bonus:0},
   {type:"birthday",icon:"🎂",title:"Birthday girl bonus",desc:"Everyone who matched Julia's answer gets 500 bonus points.",bonus:500},
@@ -557,15 +557,15 @@ async function executeChaos(winnerId, chaos) {
       break;
 
     case 'sabotage':
-      // Winner picks someone to lose 100 pts
+      // Winner picks someone to lose 200 pts
       showToast(`${winner.name} picks someone to sabotage 💀`);
       renderPlayerPicker(
-        `${winner.name} sabotages (−100 pts):`,
+        `${winner.name} sabotages (−200 pts):`,
         playerList.filter(([pid])=>pid!==winnerId),
         async (targetId) => {
           const target = players[targetId];
-          await update(ref(db,`players/${targetId}`),{score:Math.max(0,(target.score||0)-100)});
-          showToast(`${target.name} loses 100 pts 💀`);
+          await update(ref(db,`players/${targetId}`),{score:Math.max(0,(target.score||0)-200)});
+          showToast(`${target.name} loses 200 pts 💀`);
           hidePicker();
           document.getElementById('modal-action-btn').textContent = 'Close';
           modalStep = 'done';
@@ -621,12 +621,19 @@ async function executeChaos(winnerId, chaos) {
 function renderPlayerPicker(label, playerEntries, onPick) {
   const wrap = document.getElementById('chaos-winner-wrap');
   const btns = document.getElementById('chaos-winner-btns');
-  document.getElementById('chaos-winner-label').textContent = label;
-  btns.innerHTML = playerEntries.map(([pid,p]) =>
-    `<button class="chaos-winner-btn" onclick="chaosPickTarget('${pid}')">${p.name}</button>`
-  ).join('');
+  const lbl = document.getElementById('chaos-winner-label');
+  const actionBtn = document.getElementById('modal-action-btn');
+  if(!wrap || !btns || !lbl) { console.error('Picker elements missing'); return; }
+  lbl.textContent = label;
+  if(!playerEntries.length) {
+    btns.innerHTML = '<div style="font-size:13px;color:#F4C0D1;text-align:center">No other players to pick from!</div>';
+  } else {
+    btns.innerHTML = playerEntries.map(([pid,p]) =>
+      `<button class="chaos-winner-btn" onclick="chaosPickTarget('${pid}')">${p.name}</button>`
+    ).join('');
+  }
   wrap.style.display = 'block';
-  document.getElementById('modal-action-btn').disabled = true;
+  if(actionBtn) actionBtn.disabled = true;
   window._chaosPickCallback = onPick;
 }
 
