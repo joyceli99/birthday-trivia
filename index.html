@@ -509,18 +509,8 @@ async function executeChaos(winnerId, chaos) {
   switch(chaos.type) {
 
     case 'sip':
-      // Step 1: show mission. Step 2: host confirms player sipped → points awarded.
-      showConfirmBtn(
-        `🍹 ${winner.name} must take a sip`,
-        `✅ Confirm ${winner.name} sipped`,
-        async () => {
-          await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
-          showToast(`${winner.name} sipped! +${chaos.bonus} pts banked 🍹`);
-          hidePicker();
-          document.getElementById('modal-action-btn').textContent = 'Close';
-          modalStep = 'done';
-        }
-      );
+      // Go through each winner one by one — confirm per person
+      sipConfirmLoop([...selectedWinners], chaos.bonus);
       break;
 
     case 'pick':
@@ -624,6 +614,47 @@ async function executeChaos(winnerId, chaos) {
       modalStep = 'done';
   }
 }
+
+// Sip confirmation loop — goes through each winner individually
+function sipConfirmLoop(remaining, bonus) {
+  if(!remaining.length) {
+    hidePicker();
+    document.getElementById('modal-action-btn').textContent = 'Close';
+    modalStep = 'done';
+    return;
+  }
+  const pid = remaining[0];
+  const rest = remaining.slice(1);
+  const name = players[pid]?.name || 'Player';
+  const counter = `(${([...selectedWinners].length - remaining.length) + 1} of ${[...selectedWinners].length})`;
+  const wrap = document.getElementById('chaos-winner-wrap');
+  const lbl = document.getElementById('chaos-winner-label');
+  const btns = document.getElementById('chaos-winner-btns');
+  if(!wrap||!lbl||!btns) return;
+  lbl.textContent = `🍹 ${name} must take a sip ${counter}`;
+  btns.innerHTML = `
+    <button class="chaos-winner-btn" style="background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);"
+      onclick="sipConfirmOne('${pid}', ${bonus}, ${JSON.stringify(rest)})">
+      ✅ ${name} sipped — +${bonus} pts
+    </button>
+    <button class="chaos-winner-btn" style="background:transparent;color:var(--text-muted);"
+      onclick="sipSkipOne(${JSON.stringify(rest)}, ${bonus})">
+      ❌ ${name} didn't sip — skip
+    </button>`;
+  wrap.style.display = 'block';
+  document.getElementById('modal-action-btn').disabled = true;
+  modalStep = 'chaos-pick';
+}
+
+window.sipConfirmOne = async function(pid, bonus, rest) {
+  await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+bonus)});
+  showToast(`${players[pid]?.name} sipped! +${bonus} pts 🍹`);
+  sipConfirmLoop(rest, bonus);
+};
+
+window.sipSkipOne = function(rest, bonus) {
+  sipConfirmLoop(rest, bonus);
+};
 
 // Show a single confirm button (for sip / pick victim drink confirmation)
 function showConfirmBtn(label, btnText, onConfirm) {
