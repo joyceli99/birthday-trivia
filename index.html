@@ -749,6 +749,9 @@ function renderPlayerPicker(label, playerEntries, onPick) {
   const lbl = document.getElementById('chaos-winner-label');
   const actionBtn = document.getElementById('modal-action-btn');
   if(!wrap || !btns || !lbl) { console.error('Picker elements missing'); return; }
+  // Show wrap FIRST before writing to children
+  wrap.style.display = 'block';
+  if(actionBtn) actionBtn.disabled = true;
   lbl.textContent = label;
   if(!playerEntries.length) {
     btns.innerHTML = '<div style="font-size:13px;color:#F4C0D1;text-align:center">No other players to pick from!</div>';
@@ -757,8 +760,6 @@ function renderPlayerPicker(label, playerEntries, onPick) {
       `<button class="chaos-winner-btn" onclick="chaosPickTarget('${pid}')">${p.name}</button>`
     ).join('');
   }
-  wrap.style.display = 'block';
-  if(actionBtn) actionBtn.disabled = true;
   window._chaosPickCallback = onPick;
 }
 
