@@ -509,10 +509,32 @@ async function executeChaos(winnerId, chaos) {
 
   switch(chaos.type) {
 
-    case 'sip':
-      // Go through each winner one by one — confirm per person
-      sipConfirmLoop([...selectedWinners], chaos.bonus);
+    case 'sip': {
+      // Show checklist of all winners — host taps who sipped, confirms, only those get bonus
+      const sipWinners = new Set();
+      const wrap = document.getElementById('chaos-winner-wrap');
+      const lbl = document.getElementById('chaos-winner-label');
+      const btns = document.getElementById('chaos-winner-btns');
+      const actionBtn = document.getElementById('modal-action-btn');
+      lbl.textContent = '🍹 Who sipped? Tap to select, then confirm.';
+      const renderSipList = () => {
+        btns.innerHTML = [...selectedWinners].map(pid => {
+          const sel = sipWinners.has(pid);
+          return `<button class="chaos-winner-btn ${sel?'selected-sip':''}"
+            style="${sel?'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);':''}"
+            onclick="toggleSipWinner('${pid}', ${chaos.bonus})">${players[pid]?.name} ${sel?'✅':''}</button>`;
+        }).join('');
+        btns.innerHTML += `<button class="chaos-winner-btn" style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
+          onclick="confirmSipAll(${chaos.bonus})">Confirm sips & award points</button>`;
+      };
+      renderSipList();
+      wrap.style.display = 'block';
+      actionBtn.disabled = true;
+      modalStep = 'chaos-pick';
+      window._sipWinners = sipWinners;
+      window._renderSipList = renderSipList;
       break;
+    }
 
     case 'pick':
       // Auto: winner gets +100 bonus points instantly
@@ -601,45 +623,25 @@ async function executeChaos(winnerId, chaos) {
   }
 }
 
-// Sip confirmation loop — goes through each winner individually
-function sipConfirmLoop(remaining, bonus) {
-  if(!remaining.length) {
-    hidePicker();
-    document.getElementById('modal-action-btn').textContent = 'Close';
-    modalStep = 'done';
-    return;
-  }
-  const pid = remaining[0];
-  const rest = remaining.slice(1);
-  const name = players[pid]?.name || 'Player';
-  const counter = `(${([...selectedWinners].length - remaining.length) + 1} of ${[...selectedWinners].length})`;
-  const wrap = document.getElementById('chaos-winner-wrap');
-  const lbl = document.getElementById('chaos-winner-label');
-  const btns = document.getElementById('chaos-winner-btns');
-  if(!wrap||!lbl||!btns) return;
-  lbl.textContent = `🍹 ${name} must take a sip ${counter}`;
-  btns.innerHTML = `
-    <button class="chaos-winner-btn" style="background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);"
-      onclick="sipConfirmOne('${pid}', ${bonus}, ${JSON.stringify(rest)})">
-      ✅ ${name} sipped — +${bonus} pts
-    </button>
-    <button class="chaos-winner-btn" style="background:transparent;color:var(--text-muted);"
-      onclick="sipSkipOne(${JSON.stringify(rest)}, ${bonus})">
-      ❌ ${name} didn't sip — skip
-    </button>`;
-  wrap.style.display = 'block';
-  document.getElementById('modal-action-btn').disabled = true;
-  modalStep = 'chaos-pick';
-}
-
-window.sipConfirmOne = async function(pid, bonus, rest) {
-  await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+bonus)});
-  showToast(`${players[pid]?.name} sipped! +${bonus} pts 🍹`);
-  sipConfirmLoop(rest, bonus);
+window.toggleSipWinner = function(pid) {
+  if(!window._sipWinners) return;
+  if(window._sipWinners.has(pid)) window._sipWinners.delete(pid);
+  else window._sipWinners.add(pid);
+  if(window._renderSipList) window._renderSipList();
 };
 
-window.sipSkipOne = function(rest, bonus) {
-  sipConfirmLoop(rest, bonus);
+window.confirmSipAll = async function(bonus) {
+  if(!window._sipWinners) return;
+  for(const pid of window._sipWinners) {
+    await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+bonus)});
+  }
+  const names = [...window._sipWinners].map(pid => players[pid]?.name).join(', ');
+  showToast(window._sipWinners.size ? `🍹 ${names} sipped! +${bonus} pts each` : 'No one sipped');
+  window._sipWinners = null;
+  window._renderSipList = null;
+  hidePicker();
+  document.getElementById('modal-action-btn').textContent = 'Close';
+  modalStep = 'done';
 };
 
 // Show a single confirm button (for sip / pick victim drink confirmation)
