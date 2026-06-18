@@ -474,149 +474,154 @@ async function awardSelectedWinners() {
     document.getElementById('chaos-title').textContent = tile.chaos.title;
     document.getElementById('chaos-desc').textContent = tile.chaos.desc;
     document.getElementById('chaos-reveal').style.display = 'block';
-
-    // If multiple winners, pick who executes the chaos
-    if(selectedWinners.size > 1) {
-      const btns = document.getElementById('chaos-winner-btns');
-      btns.innerHTML = [...selectedWinners].map(pid =>
-        `<button class="chaos-winner-btn" onclick="pickChaosWinner('${pid}')">${players[pid]?.name}</button>`
-      ).join('');
-      document.getElementById('chaos-winner-wrap').style.display = 'block';
-      document.getElementById('modal-action-btn').disabled = true;
-      modalStep = 'chaos-pick';
-    } else {
-      await executeChaos([...selectedWinners][0], tile.chaos);
-    }
+    // Always show multi-select checklist first, then execute
+    showChaosWinnerSelect(tile.chaos);
   } else {
     document.getElementById('modal-action-btn').textContent = 'Close';
     modalStep = 'done';
   }
 }
 
-window.pickChaosWinner = async function(pid) {
-  // Clear the winner-picker but keep action btn disabled — executeChaos will manage it
+// Show multi-select checklist of winners — host picks who gets chaos power, then confirms
+function showChaosWinnerSelect(chaos) {
   const wrap = document.getElementById('chaos-winner-wrap');
-  if(wrap) wrap.style.display = 'none';
-  await executeChaos(pid, currentTile.tile.chaos);
+  const lbl = document.getElementById('chaos-winner-label');
+  const btns = document.getElementById('chaos-winner-btns');
+  const actionBtn = document.getElementById('modal-action-btn');
+  wrap.style.display = 'block';
+  actionBtn.disabled = true;
+  modalStep = 'chaos-pick';
+  window._chaosSelected = new Set();
+  window._chaosType = chaos;
+
+  const render = () => {
+    lbl.textContent = `Who gets the chaos power? Select all that apply.`;
+    btns.innerHTML = [...selectedWinners].map(pid => {
+      const sel = window._chaosSelected.has(pid);
+      return `<button class="chaos-winner-btn"
+        style="${sel ? 'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);' : ''}"
+        onclick="toggleChaosSelect('${pid}')">${players[pid]?.name}${sel ? ' ✅' : ''}</button>`;
+    }).join('');
+    btns.innerHTML += `<button class="chaos-winner-btn"
+      style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
+      onclick="confirmChaosSelect()">✅ Confirm selection</button>`;
+  };
+  render();
+  window._renderChaosSelect = render;
+}
+
+window.toggleChaosSelect = function(pid) {
+  if(!window._chaosSelected) return;
+  if(window._chaosSelected.has(pid)) window._chaosSelected.delete(pid);
+  else window._chaosSelected.add(pid);
+  if(window._renderChaosSelect) window._renderChaosSelect();
 };
 
-async function executeChaos(winnerId, chaos) {
-  const winner = players[winnerId];
-  const playerList = Object.entries(players).sort((a,b) => b[1].score - a[1].score);
+window.confirmChaosSelect = async function() {
+  const chaos = window._chaosType;
+  const chosenWinners = [...(window._chaosSelected || [])];
+  window._chaosSelected = null;
+  window._renderChaosSelect = null;
+  window._chaosType = null;
+  hidePicker();
+  if(!chosenWinners.length) {
+    showToast('No one selected — skipping chaos');
+    document.getElementById('modal-action-btn').textContent = 'Close';
+    modalStep = 'done';
+    return;
+  }
+  await executeChaosForAll(chosenWinners, chaos);
+};
 
-  // Notify the winner's phone
-  await set(ref(db,'chaos-active'), {playerId:winnerId, playerName:winner?.name, ...chaos, ts:Date.now()});
-
+// Execute chaos for an array of winners, sequentially for actions needing per-winner interaction
+async function executeChaosForAll(winnerIds, chaos) {
   switch(chaos.type) {
 
     case 'sip': {
-      // Show checklist of all winners — host taps who sipped, confirms, only those get bonus
-      const sipWinners = new Set();
+      // All chosen winners sip — confirm each one, award +bonus each
+      const sipConfirmed = new Set();
       const wrap = document.getElementById('chaos-winner-wrap');
       const lbl = document.getElementById('chaos-winner-label');
       const btns = document.getElementById('chaos-winner-btns');
-      const actionBtn = document.getElementById('modal-action-btn');
-      // Make wrap visible FIRST before touching child elements
       wrap.style.display = 'block';
-      actionBtn.disabled = true;
+      document.getElementById('modal-action-btn').disabled = true;
       modalStep = 'chaos-pick';
-      lbl.textContent = '🍹 Who sipped? Tap to select, then confirm.';
-      const renderSipList = () => {
-        btns.innerHTML = [...selectedWinners].map(pid => {
-          const sel = sipWinners.has(pid);
+      const render = () => {
+        lbl.textContent = '🍹 Confirm who sipped:';
+        btns.innerHTML = winnerIds.map(pid => {
+          const confirmed = sipConfirmed.has(pid);
           return `<button class="chaos-winner-btn"
-            style="${sel?'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);':''}"
-            onclick="toggleSipWinner('${pid}')">${players[pid]?.name} ${sel?'✅':''}</button>`;
+            style="${confirmed ? 'background:var(--pink-hot);color:#fff;border-color:var(--pink-hot);' : ''}"
+            onclick="toggleSipConfirm('${pid}')">${players[pid]?.name}${confirmed ? ' ✅ sipped' : ' — tap to confirm'}</button>`;
         }).join('');
-        btns.innerHTML += `<button class="chaos-winner-btn" style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
-          onclick="confirmSipAll(${chaos.bonus})">✅ Confirm sips & award +${chaos.bonus} pts</button>`;
+        btns.innerHTML += `<button class="chaos-winner-btn"
+          style="margin-top:8px;background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);width:100%"
+          onclick="finalizeSips(${chaos.bonus})">✅ Award sip points</button>`;
       };
-      renderSipList();
-      window._sipWinners = sipWinners;
-      window._renderSipList = renderSipList;
+      render();
+      window._sipConfirmed = sipConfirmed;
+      window._renderSipConfirm = render;
       break;
     }
 
-    case 'pick':
-      // Auto: winner gets +100 bonus points instantly
-      await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
-      showToast(`🎁 ${winner.name} banks +${chaos.bonus} bonus pts!`);
+    case 'pick': {
+      // Auto: all chosen winners get +100 bonus instantly
+      for(const pid of winnerIds) {
+        await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+chaos.bonus)});
+      }
+      showToast(`🎁 ${winnerIds.map(p=>players[p]?.name).join(', ')} each get +${chaos.bonus} pts!`);
       document.getElementById('modal-action-btn').textContent = 'Close';
       modalStep = 'done';
       break;
+    }
 
-    case 'steal':
-      // Winner picks victim → points transfer automatically
-      renderPlayerPicker(
-        `🔄 ${winner.name} steals 200 pts from:`,
-        playerList.filter(([pid]) => pid !== winnerId),
-        async (targetId) => {
-          const target = players[targetId];
-          const stolen = Math.min(200, target.score||0);
-          await update(ref(db,`players/${targetId}`), {score: Math.max(0,(target.score||0)-stolen)});
-          await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+stolen)});
-          showToast(`${winner.name} stole ${stolen} pts from ${target.name}! 🔄`);
-          hidePicker();
-          document.getElementById('modal-action-btn').textContent = 'Close';
-          modalStep = 'done';
-        }
-      );
+    case 'steal': {
+      // Each winner picks someone to steal from, sequentially
+      stealLoop(winnerIds, 0);
       break;
+    }
 
-    case 'sabotage':
-      // Winner picks victim → 200 pts deducted automatically
-      renderPlayerPicker(
-        `💀 ${winner.name} sabotages (−200 pts):`,
-        playerList.filter(([pid]) => pid !== winnerId),
-        async (targetId) => {
-          const target = players[targetId];
-          await update(ref(db,`players/${targetId}`), {score: Math.max(0,(target.score||0)-200)});
-          showToast(`${target.name} loses 200 pts 💀`);
-          hidePicker();
-          document.getElementById('modal-action-btn').textContent = 'Close';
-          modalStep = 'done';
-        }
-      );
+    case 'sabotage': {
+      // Each winner picks someone to sabotage, sequentially
+      sabotageLoop(winnerIds, 0);
       break;
+    }
 
     case 'doubledown': {
-      // Auto: winner's tile points doubled (awarded a second time)
+      // All chosen winners get their tile points doubled
       const tile = currentTile.tile;
       const bonusPts = tile.points * (tile.multiplier||1);
-      await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+bonusPts)});
-      showToast(`${winner.name}'s points doubled! +${bonusPts} bonus 🎯`);
+      for(const pid of winnerIds) {
+        await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+bonusPts)});
+      }
+      showToast(`🎯 ${winnerIds.map(p=>players[p]?.name).join(', ')} doubled! +${bonusPts} each`);
       document.getElementById('modal-action-btn').textContent = 'Close';
       modalStep = 'done';
       break;
     }
 
     case 'swap': {
-      // Auto: winner swaps score with last place
-      if(playerList.length < 2) { showToast('Not enough players to swap!'); document.getElementById('modal-action-btn').textContent='Close'; modalStep='done'; break; }
-      const lastId = playerList[playerList.length-1][0];
-      if(lastId === winnerId) {
-        showToast(`${winner.name} is already last — no swap! 😅`);
-      } else {
-        const lastScore = players[lastId]?.score||0;
-        const winnerScore = players[winnerId]?.score||0;
-        await update(ref(db,`players/${winnerId}`), {score: lastScore});
-        await update(ref(db,`players/${lastId}`), {score: winnerScore});
-        showToast(`${winner.name} swapped scores with ${players[lastId]?.name} 🔀`);
+      // Animate swaps sequentially, each winner swaps with current last place
+      if(Object.keys(players).length < 2) {
+        showToast('Not enough players!');
+        document.getElementById('modal-action-btn').textContent = 'Close';
+        modalStep = 'done';
+        break;
       }
+      await animateSwaps(winnerIds, 0);
+      break;
+    }
+
+    case 'birthday': {
+      // All chosen winners get +500
+      for(const pid of winnerIds) {
+        await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+500)});
+      }
+      showToast(`🎂 Birthday bonus! ${winnerIds.map(p=>players[p]?.name).join(', ')} each get +500!`);
       document.getElementById('modal-action-btn').textContent = 'Close';
       modalStep = 'done';
       break;
     }
-
-    case 'birthday':
-      // Auto: all winners get +500 bonus
-      for(const pid of selectedWinners) {
-        await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+500)});
-      }
-      showToast(`🎂 All winners get +500 birthday bonus pts!`);
-      document.getElementById('modal-action-btn').textContent = 'Close';
-      modalStep = 'done';
-      break;
 
     default:
       document.getElementById('modal-action-btn').textContent = 'Close';
@@ -624,26 +629,102 @@ async function executeChaos(winnerId, chaos) {
   }
 }
 
-window.toggleSipWinner = function(pid) {
-  if(!window._sipWinners) return;
-  if(window._sipWinners.has(pid)) window._sipWinners.delete(pid);
-  else window._sipWinners.add(pid);
-  if(window._renderSipList) window._renderSipList();
+// Sip confirm toggles
+window.toggleSipConfirm = function(pid) {
+  if(!window._sipConfirmed) return;
+  if(window._sipConfirmed.has(pid)) window._sipConfirmed.delete(pid);
+  else window._sipConfirmed.add(pid);
+  if(window._renderSipConfirm) window._renderSipConfirm();
 };
 
-window.confirmSipAll = async function(bonus) {
-  if(!window._sipWinners) return;
-  for(const pid of window._sipWinners) {
+window.finalizeSips = async function(bonus) {
+  const confirmed = window._sipConfirmed || new Set();
+  for(const pid of confirmed) {
     await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+bonus)});
   }
-  const names = [...window._sipWinners].map(pid => players[pid]?.name).join(', ');
-  showToast(window._sipWinners.size ? `🍹 ${names} sipped! +${bonus} pts each` : 'No one sipped');
-  window._sipWinners = null;
-  window._renderSipList = null;
+  showToast(confirmed.size ? `🍹 ${[...confirmed].map(p=>players[p]?.name).join(', ')} sipped! +${bonus} each` : 'No one sipped');
+  window._sipConfirmed = null;
+  window._renderSipConfirm = null;
   hidePicker();
   document.getElementById('modal-action-btn').textContent = 'Close';
   modalStep = 'done';
 };
+
+// Steal loop — each winner picks a victim sequentially
+function stealLoop(winnerIds, index) {
+  if(index >= winnerIds.length) {
+    hidePicker();
+    document.getElementById('modal-action-btn').textContent = 'Close';
+    modalStep = 'done';
+    return;
+  }
+  const pid = winnerIds[index];
+  const name = players[pid]?.name;
+  const others = Object.entries(players).filter(([id]) => id !== pid);
+  renderPlayerPicker(
+    `🔄 ${name} steals 200 pts from: (${index+1} of ${winnerIds.length})`,
+    others,
+    async (targetId) => {
+      const target = players[targetId];
+      const stolen = Math.min(200, target.score||0);
+      await update(ref(db,`players/${targetId}`), {score: Math.max(0,(target.score||0)-stolen)});
+      await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+stolen)});
+      showToast(`${name} stole ${stolen} pts from ${target.name}!`);
+      hidePicker();
+      stealLoop(winnerIds, index+1);
+    }
+  );
+}
+
+// Sabotage loop — each winner picks a victim sequentially
+function sabotageLoop(winnerIds, index) {
+  if(index >= winnerIds.length) {
+    hidePicker();
+    document.getElementById('modal-action-btn').textContent = 'Close';
+    modalStep = 'done';
+    return;
+  }
+  const pid = winnerIds[index];
+  const name = players[pid]?.name;
+  const others = Object.entries(players).filter(([id]) => id !== pid);
+  renderPlayerPicker(
+    `💀 ${name} sabotages (−200 pts): (${index+1} of ${winnerIds.length})`,
+    others,
+    async (targetId) => {
+      const target = players[targetId];
+      await update(ref(db,`players/${targetId}`), {score: Math.max(0,(target.score||0)-200)});
+      showToast(`${target.name} loses 200 pts 💀`);
+      hidePicker();
+      sabotageLoop(winnerIds, index+1);
+    }
+  );
+}
+
+// Swap animation — each winner swaps with current last place, with toast drama
+async function animateSwaps(winnerIds, index) {
+  if(index >= winnerIds.length) {
+    document.getElementById('modal-action-btn').textContent = 'Close';
+    modalStep = 'done';
+    return;
+  }
+  const pid = winnerIds[index];
+  const name = players[pid]?.name;
+  // Recalculate last place fresh each time (previous swap may have changed it)
+  const sorted = Object.entries(players).sort((a,b) => b[1].score - a[1].score);
+  const lastId = sorted[sorted.length-1][0];
+  if(lastId === pid) {
+    showToast(`${name} is already last — no swap! 😅`);
+    await new Promise(r => setTimeout(r, 1200));
+  } else {
+    const lastScore = players[lastId]?.score||0;
+    const winScore = players[pid]?.score||0;
+    await update(ref(db,`players/${pid}`), {score: lastScore});
+    await update(ref(db,`players/${lastId}`), {score: winScore});
+    showToast(`🔀 ${name} ↔ ${players[lastId]?.name} swapped!`);
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  await animateSwaps(winnerIds, index+1);
+}
 
 // Show a single confirm button (for sip / pick victim drink confirmation)
 function showConfirmBtn(label, btnText, onConfirm) {
