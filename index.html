@@ -237,9 +237,9 @@ const CHAOS_TILES = [
   {type:"sip",icon:"🍹",title:"Sip to earn",desc:"Winner takes a sip and banks an extra 300 points.",bonus:300},
   {type:"sip",icon:"🍹",title:"Sip to earn",desc:"Winner takes a sip and banks an extra 300 points.",bonus:300},
   {type:"sip",icon:"🍹",title:"Sip to earn",desc:"Winner takes a sip and banks an extra 300 points.",bonus:300},
-  {type:"pick",icon:"👉",title:"Pick your victim",desc:"Winner picks someone — they drink. Winner gets +200 bonus points.",bonus:200},
-  {type:"pick",icon:"👉",title:"Pick your victim",desc:"Winner picks someone — they drink. Winner gets +200 bonus points.",bonus:200},
-  {type:"pick",icon:"👉",title:"Pick your victim",desc:"Winner picks someone — they drink. Winner gets +200 bonus points.",bonus:200},
+  {type:"pick",icon:"🎁",title:"Bonus points",desc:"Lucky you! Automatically bank +100 bonus points.",bonus:100},
+  {type:"pick",icon:"🎁",title:"Bonus points",desc:"Lucky you! Automatically bank +100 bonus points.",bonus:100},
+  {type:"pick",icon:"🎁",title:"Bonus points",desc:"Lucky you! Automatically bank +100 bonus points.",bonus:100},
   {type:"steal",icon:"🔄",title:"Steal",desc:"Winner steals 200 points from any player of their choice.",bonus:0},
   {type:"steal",icon:"🔄",title:"Steal",desc:"Winner steals 200 points from any player of their choice.",bonus:0},
   {type:"sabotage",icon:"💀",title:"Sabotage",desc:"Winner picks someone to lose 200 points.",bonus:0},
@@ -514,26 +514,11 @@ async function executeChaos(winnerId, chaos) {
       break;
 
     case 'pick':
-      // Step 1: winner picks victim. Step 2: host confirms victim drank → winner gets bonus pts.
-      renderPlayerPicker(
-        `👉 ${winner.name} picks who drinks:`,
-        playerList.filter(([pid]) => pid !== winnerId),
-        async (targetId) => {
-          const targetName = players[targetId]?.name;
-          // Replace picker with confirm button
-          showConfirmBtn(
-            `🍹 ${targetName} must drink`,
-            `✅ Confirm ${targetName} drank`,
-            async () => {
-              await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
-              showToast(`${targetName} drank! ${winner.name} gets +${chaos.bonus} pts 👉`);
-              hidePicker();
-              document.getElementById('modal-action-btn').textContent = 'Close';
-              modalStep = 'done';
-            }
-          );
-        }
-      );
+      // Auto: winner gets +100 bonus points instantly
+      await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(players[winnerId]?.score||0)+chaos.bonus)});
+      showToast(`🎁 ${winner.name} banks +${chaos.bonus} bonus pts!`);
+      document.getElementById('modal-action-btn').textContent = 'Close';
+      modalStep = 'done';
       break;
 
     case 'steal':
