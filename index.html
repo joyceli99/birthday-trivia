@@ -427,6 +427,7 @@ function openModal(idx,tile,el) {
   document.getElementById('chaos-winner-wrap').style.display='none';
   document.getElementById('modal-action-btn').textContent='Reveal answer';
   document.getElementById('modal-action-btn').disabled=false;
+  document.getElementById('modal-action-btn').style.display='';
 
   document.getElementById('modal-bg').classList.add('open');
   startTimer();
@@ -557,7 +558,7 @@ async function awardSelectedWinners() {
 
   if(!selectedWinners.size) {
     showToast('No winners this round');
-    document.getElementById('modal-action-btn').textContent='Close';
+    document.getElementById('modal-action-btn').style.display = 'none';
     modalStep='done';
     return;
   }
@@ -568,7 +569,7 @@ async function awardSelectedWinners() {
     // Fullscreen chaos overlay — auto-dismisses after 2.5s then shows power selection
     showChaosOverlay(tile.chaos);
   } else {
-    document.getElementById('modal-action-btn').textContent = 'Close';
+    document.getElementById('modal-action-btn').style.display = 'none';
     modalStep = 'done';
   }
 }
@@ -647,7 +648,7 @@ window.confirmChaosSelect = async function() {
   document.getElementById('modal-action-btn').style.display = '';
   if(!chosenWinners.length) {
     showToast('No one selected — skipping chaos');
-    document.getElementById('modal-action-btn').textContent = 'Close';
+    document.getElementById('modal-action-btn').style.display = 'none';
     modalStep = 'done';
     return;
   }
@@ -670,7 +671,7 @@ async function executeChaosForAll(winnerIds, chaos) {
         await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+chaos.bonus)});
       }
       showToast(`🎁 ${winnerIds.map(p=>players[p]?.name).join(', ')} each get +${chaos.bonus} pts!`);
-      document.getElementById('modal-action-btn').textContent = 'Close';
+      document.getElementById('modal-action-btn').style.display = 'none';
       modalStep = 'done';
       break;
     }
@@ -695,7 +696,7 @@ async function executeChaosForAll(winnerIds, chaos) {
         await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+bonusPts)});
       }
       showToast(`🎯 ${winnerIds.map(p=>players[p]?.name).join(', ')} doubled! +${bonusPts} each`);
-      document.getElementById('modal-action-btn').textContent = 'Close';
+      document.getElementById('modal-action-btn').style.display = 'none';
       modalStep = 'done';
       break;
     }
@@ -704,7 +705,7 @@ async function executeChaosForAll(winnerIds, chaos) {
       // Animate swaps sequentially, each winner swaps with current last place
       if(Object.keys(players).length < 2) {
         showToast('Not enough players!');
-        document.getElementById('modal-action-btn').textContent = 'Close';
+        document.getElementById('modal-action-btn').style.display = 'none';
         modalStep = 'done';
         break;
       }
@@ -718,13 +719,13 @@ async function executeChaosForAll(winnerIds, chaos) {
         await update(ref(db,`players/${pid}`), {score: Math.max(0,(players[pid]?.score||0)+500)});
       }
       showToast(`🎂 Birthday bonus! ${winnerIds.map(p=>players[p]?.name).join(', ')} each get +500!`);
-      document.getElementById('modal-action-btn').textContent = 'Close';
+      document.getElementById('modal-action-btn').style.display = 'none';
       modalStep = 'done';
       break;
     }
 
     default:
-      document.getElementById('modal-action-btn').textContent = 'Close';
+      document.getElementById('modal-action-btn').style.display = 'none';
       modalStep = 'done';
   }
 }
@@ -778,7 +779,7 @@ window.finalizeSips = async function(bonus) {
   window._renderSipConfirm = null;
   window._sipBonus = null;
   hidePicker();
-  document.getElementById('modal-action-btn').textContent = 'Close';
+  document.getElementById('modal-action-btn').style.display = 'none';
   document.getElementById('modal-action-btn').className = 'btn btn-ghost';
   modalStep = 'done';
 };
@@ -787,7 +788,7 @@ window.finalizeSips = async function(bonus) {
 function stealLoop(winnerIds, index) {
   if(index >= winnerIds.length) {
     hidePicker();
-    document.getElementById('modal-action-btn').textContent = 'Close';
+    document.getElementById('modal-action-btn').style.display = 'none';
     modalStep = 'done';
     return;
   }
@@ -813,7 +814,7 @@ function stealLoop(winnerIds, index) {
 function sabotageLoop(winnerIds, index) {
   if(index >= winnerIds.length) {
     hidePicker();
-    document.getElementById('modal-action-btn').textContent = 'Close';
+    document.getElementById('modal-action-btn').style.display = 'none';
     modalStep = 'done';
     return;
   }
@@ -836,7 +837,7 @@ function sabotageLoop(winnerIds, index) {
 // Swap animation — each winner swaps with current last place, with toast drama
 async function animateSwaps(winnerIds, index) {
   if(index >= winnerIds.length) {
-    document.getElementById('modal-action-btn').textContent = 'Close';
+    document.getElementById('modal-action-btn').style.display = 'none';
     modalStep = 'done';
     return;
   }
@@ -910,7 +911,7 @@ window.confirmSip = async function(winnerId, bonus) {
   await update(ref(db,`players/${winnerId}`), {score: Math.max(0,(winner?.score||0)+bonus)});
   showToast(`${winner?.name} sipped! +${bonus} pts banked 🍹`);
   hidePicker();
-  document.getElementById('modal-action-btn').textContent = 'Close';
+  document.getElementById('modal-action-btn').style.display = 'none';
   modalStep = 'done';
 };
 
