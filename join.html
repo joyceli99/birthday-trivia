@@ -38,6 +38,11 @@
   .answer-input:focus{border-color:var(--pink-deep);}
   .submit-answer-btn{width:100%;padding:12px;background:var(--pink-hot);color:var(--white);border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
   .submit-answer-btn:disabled{opacity:0.5;}
+  .choice-btn{width:100%;text-align:left;padding:13px 16px;margin-bottom:8px;border:1.5px solid var(--pink-border);border-radius:12px;background:var(--pink-bg);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.15s,border-color 0.15s;}
+  .choice-btn:hover{background:var(--pink-light);}
+  .choice-btn.selected{background:var(--pink-hot);color:var(--white);border-color:var(--pink-hot);}
+  .choice-letter{width:24px;height:24px;border-radius:6px;background:var(--white);color:var(--pink-deep);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+  .choice-btn.selected .choice-letter{background:rgba(255,255,255,0.25);color:var(--white);}
   .submitted-badge{background:var(--pink-light);border:1px solid var(--pink-border);border-radius:10px;padding:10px;font-size:13px;color:var(--pink-deep);display:none;}
 
   /* Timer */
@@ -93,9 +98,14 @@
     <div class="answer-zone" id="answer-zone">
       <div class="timer-bar-wrap"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>
       <div class="timer-label" id="timer-label">30 seconds</div>
-      <div class="answer-zone-label">Your answer</div>
-      <input type="text" class="answer-input" id="answer-input" placeholder="Type your answer…" maxlength="200"/>
-      <button class="submit-answer-btn" id="submit-answer-btn" onclick="submitAnswer()">Submit answer</button>
+
+      <div id="choice-wrap" style="display:none"></div>
+
+      <div id="text-answer-wrap" style="display:none">
+        <div class="answer-zone-label">Your answer</div>
+        <input type="text" class="answer-input" id="answer-input" placeholder="Type your answer…" maxlength="200"/>
+        <button class="submit-answer-btn" id="submit-answer-btn" onclick="submitAnswer()">Submit answer</button>
+      </div>
     </div>
     <div class="submitted-badge" id="submitted-badge">✅ Answer submitted! Waiting for host…</div>
 
@@ -130,11 +140,18 @@ let players = {};
 let roundActive = false;
 let timerInterval = null;
 let timerSecs = 30;
+let currentChoices = null;
+let selectedChoice = null;
 
 // Live players
 onValue(ref(db,'players'), s => {
   players = s.exists() ? s.val() : {};
   renderLeaderboard();
+});
+
+// Round choices watcher — multiple choice questions
+onValue(ref(db,'round-choices'), s => {
+  currentChoices = s.exists() ? s.val() : null;
 });
 
 // Round active watcher
@@ -205,17 +222,56 @@ function showJoined() {
 function startAnswerTimer() {
   if(!myPlayerId) return;
   timerSecs=30;
+  selectedChoice=null;
   document.getElementById('answer-zone').style.display='block';
   document.getElementById('submitted-badge').style.display='none';
   document.getElementById('answer-input').value='';
-  document.getElementById('answer-input').disabled=false;
-  document.getElementById('submit-answer-btn').disabled=false;
+
+  const choiceWrap = document.getElementById('choice-wrap');
+  const textWrap = document.getElementById('text-answer-wrap');
+
+  if(currentChoices && currentChoices.length) {
+    // Multiple choice mode — render tappable buttons
+    textWrap.style.display = 'none';
+    choiceWrap.style.display = 'block';
+    choiceWrap.innerHTML = currentChoices.map((c,i) => `
+      <button class="choice-btn" id="choice-btn-${i}" onclick="selectChoice(${i})">
+        <span class="choice-letter">${c.label}</span> ${c.text}
+      </button>
+    `).join('');
+  } else {
+    // Free text mode
+    choiceWrap.style.display = 'none';
+    textWrap.style.display = 'block';
+    document.getElementById('answer-input').disabled=false;
+    document.getElementById('submit-answer-btn').disabled=false;
+  }
+
   updateTimerBar();
   timerInterval=setInterval(()=>{
     timerSecs--;
     updateTimerBar();
     if(timerSecs<=0){ clearInterval(timerInterval); timeUp(); }
   },1000);
+}
+
+window.selectChoice = function(i) {
+  if(timerSecs<=0) return;
+  selectedChoice = i;
+  document.querySelectorAll('.choice-btn').forEach((b,idx)=>{
+    b.classList.toggle('selected', idx===i);
+  });
+  // Auto-submit on tap for multiple choice — instant feedback
+  submitChoiceAnswer(i);
+};
+
+async function submitChoiceAnswer(i) {
+  const choice = currentChoices[i];
+  if(!choice||!myPlayerId) return;
+  await update(ref(db,`players/${myPlayerId}`),{roundAnswer: `${choice.label}. ${choice.text}`});
+  clearInterval(timerInterval);
+  document.getElementById('answer-zone').style.display='none';
+  document.getElementById('submitted-badge').style.display='block';
 }
 
 function stopAnswerTimer() {
