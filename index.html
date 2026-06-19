@@ -251,7 +251,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const CATEGORIES = ["Would Julia Rather","Julia or a Friend?","Julia's Hot Takes","Baby Julia","FIFA Countries"];
+const CATEGORIES = ["Would Julia Rather","Julia's Favorites","Julia's Hot Takes","Baby Julia","FIFA Countries"];
 const POINTS = [100,200,300,400,500];
 
 const QUESTIONS = [
@@ -268,11 +268,16 @@ const QUESTIONS = [
      choices:[{label:"A",text:"Classical Greece golden age"},{label:"B",text:"Well-developed future Earth"}]},
   ],
   [
-    {q:"Who once got lost trying to find the bathroom at a party and ended up outside — Julia or a friend?",a:"jof_100"},
-    {q:"Who cried at a commercial for a fast food chain — Julia or a friend?",a:"jof_200"},
-    {q:"Who has a Pinterest board with over 2,000 pins — Julia or a friend?",a:"jof_300"},
-    {q:"Who once texted the wrong person something extremely embarrassing — Julia or a friend?",a:"jof_400"},
-    {q:"Who once convinced the group to take a detour that added 2 hours to a road trip — Julia or a friend?",a:"jof_500"},
+    {q:"What's Julia's favorite color?",a:"jf_100",
+     decoys:["Red","Black","Yellow"]},
+    {q:"What's Julia's favorite movie?",a:"jf_200",
+     decoys:["The Notebook","Inception","La La Land"]},
+    {q:"What's Julia's favorite cuisine?",a:"jf_300",
+     decoys:["Italian","Thai","Mexican"]},
+    {q:"What's Julia's favorite bar?",a:"jf_400",
+     decoys:["The Dead Rabbit","Death & Co","Employees Only"]},
+    {q:"What's Julia's favorite workout class?",a:"jf_500",
+     decoys:["Pilates","Spin","CrossFit"]},
   ],
   [
     {q:"What is Julia's hot take on pineapple on pizza?",a:"jht_100"},
@@ -342,7 +347,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v6-baby-julia-update';
+  const LAYOUT_VERSION = 'v7-julias-favorites';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -375,7 +380,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v6-baby-julia-update');
+  localStorage.setItem('julia-board-layout-version','v7-julias-favorites');
   return layout;
 }
 
@@ -438,7 +443,18 @@ function openModal(idx,tile,el) {
   set(ref(db,'round-active'),true);
 
   // Sync multiple-choice options to players' phones, if this question has them
-  const choices = tile.question?.choices || null;
+  let choices = tile.question?.choices || null;
+  // For decoy-based questions (e.g. Julia's Favorites), build choices from Julia's real answer + decoys
+  if(!choices && tile.question?.decoys && tile.question?.a) {
+    const realAnswer = juliaAnswers[tile.question.a];
+    if(realAnswer) {
+      const allOptions = [...tile.question.decoys, realAnswer].sort(() => Math.random() - 0.5);
+      const labels = ['A','B','C','D'];
+      choices = allOptions.map((text,i) => ({label: labels[i], text, correct: text === realAnswer}));
+    }
+    // If Julia hasn't answered yet, choices stays null and player gets free text instead
+  }
+  currentTile.choices = choices; // remember for the reveal step
   if(choices) {
     set(ref(db,'round-choices'), choices);
   } else {
