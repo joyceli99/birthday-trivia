@@ -336,14 +336,15 @@ const CHAOS_TILES = [
 const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
-  // Force rebuild if old layout doesn't have question on chaos tiles
+  // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
+  const LAYOUT_VERSION = 'v3-fifa-choices';
   const saved = localStorage.getItem('julia-board-layout');
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    const chaosWithoutQ = parsed.find(t => t.isChaos && !t.question);
-    if (!chaosWithoutQ) return parsed;
-    localStorage.removeItem('julia-board-layout'); // stale — rebuild
+  const savedVersion = localStorage.getItem('julia-board-layout-version');
+  if (saved && savedVersion === LAYOUT_VERSION) {
+    return JSON.parse(saved);
   }
+  // Stale or missing — clear and rebuild
+  localStorage.removeItem('julia-board-layout');
 
   // Build all 25 question slots: col=category, row=point level
   const allSlots = [];
@@ -369,6 +370,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
+  localStorage.setItem('julia-board-layout-version','v3-fifa-choices');
   return layout;
 }
 
