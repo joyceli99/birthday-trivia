@@ -280,11 +280,25 @@ const QUESTIONS = [
      decoys:["Pilates","Spin","CrossFit"]},
   ],
   [
-    {q:"What is Julia's hot take on pineapple on pizza?",a:"jht_100"},
-    {q:"What does Julia think about people who don't text back within an hour?",a:"jht_200"},
-    {q:"What is Julia's most controversial opinion about a popular TV show or movie?",a:"jht_300"},
-    {q:"What does Julia think is the most overrated travel destination?",a:"jht_400"},
-    {q:"What is Julia's spiciest opinion about dating in 2026?",a:"jht_500"},
+    {q:"Which Bay Area restaurant does Julia find super overrated?",a:"jht_100",
+     decoys:["State Bird Provisions","The Slanted Door","Zuni Café"]},
+    {q:"Does Julia want Taylor Frankie Paul's cancelled Bachelorette season to air, or not?",a:"jht_200",
+     choices:[{label:"A",text:"Air it"},{label:"B",text:"Leave it cancelled"}]},
+    {q:"Which quality of a man does Julia find overrated?",a:"jht_300",
+     choices:[
+       {label:"A",text:"Height"},
+       {label:"B",text:"Looks"},
+       {label:"C",text:"Hairline"},
+       {label:"D",text:"Style"},
+       {label:"E",text:"Humor"}
+     ]},
+    {q:"What does Julia think is the most annoying Gen Z dating trend?",a:"jht_400",
+     choices:[
+       {label:"A",text:"Situationships"},
+       {label:"B",text:"Breadcrumbing"},
+       {label:"C",text:"Talking stages that never end"}
+     ]},
+    {q:"What's the oldest age Julia would date?",a:"jht_500"},
   ],
   [
     {q:"How many siblings does Julia have?",a:"bj_100"},
@@ -347,7 +361,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v7-julias-favorites';
+  const LAYOUT_VERSION = 'v8-hot-takes-update';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -380,7 +394,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v7-julias-favorites');
+  localStorage.setItem('julia-board-layout-version','v8-hot-takes-update');
   return layout;
 }
 
@@ -527,8 +541,8 @@ function timerDone() {
     document.querySelector('.julia-answer-label').textContent = '✅ Correct answer';
   } else if(q?.a) {
     let answer = juliaAnswers[q.a]||'(no answer yet)';
-    // If this question has choices (e.g. Would Julia Rather A/B), translate the letter to readable text
-    if(q.choices && (answer === 'A' || answer === 'B')) {
+    // If this question has fixed choices (e.g. toggle/multi-select), translate the letter to readable text
+    if(q.choices) {
       const picked = q.choices.find(c => c.label === answer);
       if(picked) answer = `${answer}. ${picked.text}`;
     }
