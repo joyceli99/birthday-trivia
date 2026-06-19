@@ -256,11 +256,11 @@ const POINTS = [100,200,300,400,500];
 
 const QUESTIONS = [
   [
-    {q:"Would Julia rather spend a weekend camping in the wild with no phone, or at a luxury hotel alone with no friends?",a:"wjr_100"},
-    {q:"Would Julia rather eat the same meal every day for a year, or never eat her favorite food again?",a:"wjr_200"},
-    {q:"Would Julia rather always speak in rhymes, or always sing instead of talk?",a:"wjr_300"},
-    {q:"Would Julia rather know how she dies, or know when she dies?",a:"wjr_400"},
-    {q:"Would Julia rather have unlimited money but no friends, or be broke but surrounded by her favorite people?",a:"wjr_500"},
+    {q:"Would Julia rather live in her college dorm for another year, or be a digital nomad?",a:"wjr_100"},
+    {q:"Would Julia rather lose her phone for a month, or skip meditation/yoga for a month?",a:"wjr_200"},
+    {q:"Would Julia rather participate in Love Island or Singles Inferno?",a:"wjr_300"},
+    {q:"Would Julia rather watch the same movie, or eat the same food every day for the rest of her life?",a:"wjr_400"},
+    {q:"Would Julia rather live in Classical Greece at its golden age, or in a well-developed future Earth?",a:"wjr_500"},
   ],
   [
     {q:"Who once got lost trying to find the bathroom at a party and ended up outside — Julia or a friend?",a:"jof_100"},
@@ -337,7 +337,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v3-fifa-choices';
+  const LAYOUT_VERSION = 'v4-wjr-personalized';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -370,7 +370,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v3-fifa-choices');
+  localStorage.setItem('julia-board-layout-version','v4-wjr-personalized');
   return layout;
 }
 
