@@ -285,8 +285,8 @@ const QUESTIONS = [
     {q:"How many siblings does Julia have?",a:"bj_100"},
     {q:"What was Julia's first job ever?",a:"bj_200"},
     {q:"What did young Julia want to be when she grew up?",a:"bj_300"},
-    {q:"What was Julia's most embarrassing phase growing up?",a:"bj_400"},
-    {q:"What is something Julia did as a kid that she is still not over?",a:"bj_500"},
+    {q:"What instrument, sport, or hobby did Julia quit after less than a month?",a:"bj_400"},
+    {q:"What's the most \"extra\" thing Julia did to get someone's attention as a kid/teen?",a:"bj_500"},
   ],
   [
     {q:"How many teams are competing in the 2026 World Cup — the largest in history?",answer:"48 teams"},
@@ -342,7 +342,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v5-wjr-multiplechoice';
+  const LAYOUT_VERSION = 'v6-baby-julia-update';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -375,7 +375,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v5-wjr-multiplechoice');
+  localStorage.setItem('julia-board-layout-version','v6-baby-julia-update');
   return layout;
 }
 
