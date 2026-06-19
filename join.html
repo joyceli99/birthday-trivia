@@ -168,8 +168,23 @@ window.joinGame = async function() {
   const err = document.getElementById('error-msg');
   if(!name){ err.textContent='Enter your name 💅'; return; }
   if(name.length<2){ err.textContent='A little longer please'; return; }
-  const taken = Object.values(players).some(p=>p.name.toLowerCase()===name.toLowerCase());
-  if(taken && myName?.toLowerCase()!==name.toLowerCase()){ err.textContent='Name taken — pick another'; return; }
+
+  // Check if this name already exists as a player (e.g. they lost localStorage)
+  const existingEntry = Object.entries(players).find(([id,p]) => p.name.toLowerCase() === name.toLowerCase());
+
+  if(existingEntry && existingEntry[0] !== myPlayerId) {
+    // Reconnect to the existing player record — preserve their score
+    const [existingId, existingPlayer] = existingEntry;
+    myPlayerId = existingId;
+    myName = existingPlayer.name; // use the original casing
+    localStorage.setItem('julia-player-id', myPlayerId);
+    localStorage.setItem('julia-player-name', myName);
+    err.textContent='';
+    document.getElementById('join-btn').disabled=true;
+    showJoined();
+    return;
+  }
+
   err.textContent='';
   document.getElementById('join-btn').disabled=true;
   if(!myPlayerId){ const r=push(ref(db,'players')); myPlayerId=r.key; localStorage.setItem('julia-player-id',myPlayerId); }
