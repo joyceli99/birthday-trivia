@@ -298,7 +298,7 @@ const QUESTIONS = [
        {label:"B",text:"Breadcrumbing"},
        {label:"C",text:"Talking stages that never end"}
      ]},
-    {q:"What's the oldest age Julia would date?",a:"jht_500"},
+    {q:"What's the oldest age Julia would date? (closest guess wins)",a:"jht_500"},
   ],
   [
     {q:"How many siblings does Julia have?",a:"bj_100"},
@@ -361,7 +361,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v8-hot-takes-update';
+  const LAYOUT_VERSION = 'v9-closest-wins';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -394,7 +394,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v8-hot-takes-update');
+  localStorage.setItem('julia-board-layout-version','v9-closest-wins');
   return layout;
 }
 
