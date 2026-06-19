@@ -88,6 +88,13 @@
   .julia-answer-wrap { margin: 10px 0; }
   .julia-answer-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
   .julia-answer-box { background: var(--pink-light); border: 1.5px solid var(--pink-hot); border-radius: 10px; padding: 10px 14px; font-size: 15px; font-weight: 600; color: var(--pink-deep); }
+  .image-options-wrap { margin: 10px 0; }
+  .image-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .image-option { border-radius: 12px; border: 2px solid var(--pink-border); overflow: hidden; background: var(--white); text-align: center; padding: 10px 8px; }
+  .image-option.correct-flag { border-color: #2D7A3A; background: #EAF3DE; }
+  .image-option svg { width: 100%; height: 60px; border-radius: 4px; margin-bottom: 6px; }
+  .image-option-label { font-size: 12px; font-weight: 600; color: var(--pink-deep); }
+  .image-option.correct-flag .image-option-label { color: #1E5226; }
 
   /* CHAOS REVEAL */
   .chaos-reveal { background: var(--pink-deep); border-radius: 14px; padding: 1rem; margin: 10px 0; text-align: center; }
@@ -188,6 +195,10 @@
       <div class="julia-answer-box" id="julia-answer-box"></div>
     </div>
 
+    <div class="image-options-wrap" id="image-options-wrap" style="display:none">
+      <div class="image-options-grid" id="image-options-grid"></div>
+    </div>
+
     <!-- Player answers -->
     <div class="answers-section" id="answers-section" style="display:none">
       <div class="answers-label">Tap everyone who got it right</div>
@@ -240,7 +251,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const CATEGORIES = ["Would Julia Rather","Julia or a Friend?","Julia's Hot Takes","Baby Julia","Global Politics"];
+const CATEGORIES = ["Would Julia Rather","Julia or a Friend?","Julia's Hot Takes","Baby Julia","FIFA Countries"];
 const POINTS = [100,200,300,400,500];
 
 const QUESTIONS = [
@@ -273,11 +284,17 @@ const QUESTIONS = [
     {q:"What is something Julia did as a kid that she is still not over?",a:"bj_500"},
   ],
   [
-    {q:"Which world leader does Julia think would be the most chaotic dinner guest?",a:"gp_100"},
-    {q:"If Julia were president for a day, what is the first law she would pass?",a:"gp_200"},
-    {q:"Which country does Julia think has the best approach to work-life balance?",a:"gp_300"},
-    {q:"If Julia had to explain a current geopolitical conflict using a reality TV show, which show?",a:"gp_400"},
-    {q:"What does Julia think is the most underrated country in the world?",a:"gp_500"},
+    {q:"How many teams are competing in the 2026 World Cup — the largest in history?",answer:"48 teams"},
+    {q:"What is the national dish of Spain?",answer:"Paella (fun fact: many Spaniards consider it a regional Valencian dish, not a national one!)"},
+    {q:"Which country is the lowest-ranked team competing in the 2026 World Cup?",answer:"New Zealand (Curaçao is also a fair answer — sources differ!)"},
+    {q:"Out of Nigeria, Senegal, Ivory Coast, and DR Congo — which one did NOT qualify for the 2026 World Cup?",answer:"Nigeria — they lost the playoff final to DR Congo on penalties (4-3)"},
+    {q:"Which flag belongs to Curaçao — the smallest nation ever to qualify for a World Cup?",answer:"See the flag options below",
+     imageOptions:[
+       {label:"A", correct:false, country:"Aruba"},
+       {label:"B", correct:true, country:"Curaçao"},
+       {label:"C", correct:false, country:"Trinidad and Tobago"},
+       {label:"D", correct:false, country:"Jamaica"}
+     ]},
   ],
 ];
 
@@ -404,6 +421,7 @@ function openModal(idx,tile,el) {
 
   document.getElementById('timer-wrap').style.display='block';
   document.getElementById('julia-answer-wrap').style.display='none';
+  document.getElementById('image-options-wrap').style.display='none';
   document.getElementById('answers-section').style.display='none';
   document.getElementById('chaos-reveal').style.display='none';
   document.getElementById('chaos-winner-wrap').style.display='none';
@@ -445,18 +463,46 @@ function timerDone() {
     document.getElementById('modal-question').textContent = tile.question ? tile.question.q : tile.chaos.title;
   }
 
-  // Show Julia's answer
-  const answerKey = tile.isChaos && tile.question ? tile.question.a : tile.question?.a;
-  if(answerKey) {
-    const answer = juliaAnswers[answerKey]||(tile.isChaos?'(no answer yet)':'(no answer yet)');
+  // Show the answer — either a direct fixed answer (e.g. FIFA trivia) or Julia's submitted answer
+  const q = tile.question;
+  if(q?.answer) {
+    // Fixed-answer question (not from Julia's form)
+    document.getElementById('julia-answer-box').textContent = q.answer;
+    document.getElementById('julia-answer-wrap').style.display='block';
+    document.querySelector('.julia-answer-label').textContent = '✅ Correct answer';
+    // If this question has image options (flags), render them
+    if(q.imageOptions) renderImageOptions(q.imageOptions);
+  } else if(q?.a) {
+    const answer = juliaAnswers[q.a]||'(no answer yet)';
     document.getElementById('julia-answer-box').textContent=answer;
     document.getElementById('julia-answer-wrap').style.display='block';
+    document.querySelector('.julia-answer-label').textContent = '💎 Julia\'s answer';
   }
 
   renderAnswersList();
   document.getElementById('answers-section').style.display='block';
   document.getElementById('modal-action-btn').textContent='Award points to selected';
   modalStep='award';
+}
+
+// Flag SVGs for the FIFA Countries image question
+const FLAG_SVGS = {
+  "Curaçao": `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#002B7F"/><rect y="32" width="60" height="8" fill="#F9D616"/><g fill="#F9D616"><polygon points="14,10 15.2,13.6 19,13.6 16,15.8 17.2,19.4 14,17.2 10.8,19.4 12,15.8 9,13.6 12.8,13.6"/></g><g fill="#F9D616"><polygon points="42,4 42.8,6.4 45.4,6.4 43.3,7.9 44.1,10.3 42,8.8 39.9,10.3 40.7,7.9 38.6,6.4 41.2,6.4"/></g></svg>`,
+  "Aruba": `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#4189DD"/><rect y="14" width="60" height="4" fill="#F7E017"/><rect y="26" width="60" height="4" fill="#F7E017"/><rect x="40" y="2" width="2.5" height="10" fill="#F7111A"/><polygon points="41.25,2 43.5,4.5 41.25,7 39,4.5" fill="white" stroke="#F7111A" stroke-width="0.5"/></svg>`,
+  "Trinidad and Tobago": `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#CE1126"/><polygon points="0,0 60,40 60,28 12,0" fill="#000000"/><polygon points="0,0 60,40 60,28 12,0" fill="none"/><polygon points="0,12 0,40 12,40 60,0 48,0" fill="#000000"/><polygon points="0,8 0,16 8,16" fill="white"/><polygon points="0,24 0,32 8,24" fill="white"/><polygon points="44,0 52,0 60,8" fill="white"/><polygon points="60,32 60,24 52,24" fill="white"/></svg>`,
+  "Jamaica": `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#009B3A"/><polygon points="0,0 30,20 0,40" fill="#009B3A"/><polygon points="60,0 30,20 60,40" fill="#009B3A"/><polygon points="0,0 30,20 60,0" fill="#000000"/><polygon points="0,40 30,20 60,40" fill="#000000"/><polygon points="0,0 30,20 0,40" fill="#FED100"/><polygon points="60,0 30,20 60,40" fill="#FED100"/></svg>`
+};
+
+function renderImageOptions(options) {
+  const wrap = document.getElementById('image-options-wrap');
+  const grid = document.getElementById('image-options-grid');
+  grid.innerHTML = options.map(opt => `
+    <div class="image-option ${opt.correct ? 'correct-flag' : ''}">
+      ${FLAG_SVGS[opt.country] || ''}
+      <div class="image-option-label">${opt.label}. ${opt.correct ? opt.country + ' ✅' : opt.country}</div>
+    </div>
+  `).join('');
+  wrap.style.display = 'block';
 }
 
 function renderAnswersList() {
