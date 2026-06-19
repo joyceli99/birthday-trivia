@@ -72,6 +72,22 @@
   textarea:focus { border-color: var(--pink-hot); }
   textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
 
+  .wr-toggle { display: flex; flex-direction: column; gap: 8px; }
+  .wr-option {
+    padding: 12px 16px;
+    border: 1.5px solid var(--pink-border);
+    border-radius: 10px;
+    background: var(--pink-bg);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .wr-option.selected { background: var(--pink-hot); color: #fff; border-color: var(--pink-hot); font-weight: 600; }
+  .wr-option .wr-letter { font-weight: 700; margin-right: 8px; }
+
   .submit-wrap { text-align: center; margin-top: 2rem; }
   .btn {
     padding: 14px 48px;
@@ -116,27 +132,42 @@
     <div class="question-row">
       <div class="q-points">100 pts</div>
       <div class="q-text">Would you rather live in your college dorm for another year, or be a digital nomad?</div>
-      <textarea id="wjr_100" placeholder="Your honest answer…"></textarea>
+      <div class="wr-toggle" data-id="wjr_100">
+        <button type="button" class="wr-option" data-value="A">College dorm for another year</button>
+        <button type="button" class="wr-option" data-value="B">Digital nomad</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">200 pts</div>
       <div class="q-text">Would you rather lose your phone for a month, or skip meditation/yoga for a month?</div>
-      <textarea id="wjr_200" placeholder="Your honest answer…"></textarea>
+      <div class="wr-toggle" data-id="wjr_200">
+        <button type="button" class="wr-option" data-value="A">Lose her phone for a month</button>
+        <button type="button" class="wr-option" data-value="B">Skip meditation/yoga for a month</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">300 pts</div>
       <div class="q-text">Would you rather participate in Love Island or Singles Inferno?</div>
-      <textarea id="wjr_300" placeholder="Your honest answer…"></textarea>
+      <div class="wr-toggle" data-id="wjr_300">
+        <button type="button" class="wr-option" data-value="A">Love Island</button>
+        <button type="button" class="wr-option" data-value="B">Singles Inferno</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">400 pts</div>
       <div class="q-text">Would you rather watch the same movie, or eat the same food every day for the rest of your life?</div>
-      <textarea id="wjr_400" placeholder="Your honest answer…"></textarea>
+      <div class="wr-toggle" data-id="wjr_400">
+        <button type="button" class="wr-option" data-value="A">Watch the same movie</button>
+        <button type="button" class="wr-option" data-value="B">Eat the same food</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">500 pts</div>
       <div class="q-text">Would you rather live in Classical Greece at its golden age, or in a well-developed future Earth?</div>
-      <textarea id="wjr_500" placeholder="Your honest answer…"></textarea>
+      <div class="wr-toggle" data-id="wjr_500">
+        <button type="button" class="wr-option" data-value="A">Classical Greece golden age</button>
+        <button type="button" class="wr-option" data-value="B">Well-developed future Earth</button>
+      </div>
     </div>
   </div>
 
@@ -295,13 +326,35 @@
     'gp_100','gp_200','gp_300','gp_400','gp_500',
   ];
 
+  const TOGGLE_KEYS = ['wjr_100','wjr_200','wjr_300','wjr_400','wjr_500'];
+
+  // Wire up toggle button clicks
+  document.querySelectorAll('.wr-toggle').forEach(group => {
+    const id = group.dataset.id;
+    group.querySelectorAll('.wr-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.wr-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        group.dataset.selected = btn.dataset.value;
+      });
+    });
+  });
+
   // Pre-fill if already answered
   get(ref(db, 'julia-answers')).then(snap => {
     if (!snap.exists()) return;
     const data = snap.val();
     ANSWER_KEYS.forEach(k => {
-      const el = document.getElementById(k);
-      if (el && data[k]) el.value = data[k];
+      if (TOGGLE_KEYS.includes(k)) {
+        const group = document.querySelector(`.wr-toggle[data-id="${k}"]`);
+        if (group && data[k]) {
+          const btn = group.querySelector(`.wr-option[data-value="${data[k]}"]`);
+          if (btn) { btn.classList.add('selected'); group.dataset.selected = data[k]; }
+        }
+      } else {
+        const el = document.getElementById(k);
+        if (el && data[k]) el.value = data[k];
+      }
     });
   });
 
@@ -312,8 +365,14 @@
     const answers = {};
     let filled = 0;
     ANSWER_KEYS.forEach(k => {
-      const val = document.getElementById(k)?.value.trim();
-      if (val) { answers[k] = val; filled++; }
+      if (TOGGLE_KEYS.includes(k)) {
+        const group = document.querySelector(`.wr-toggle[data-id="${k}"]`);
+        const val = group?.dataset.selected;
+        if (val) { answers[k] = val; filled++; }
+      } else {
+        const val = document.getElementById(k)?.value.trim();
+        if (val) { answers[k] = val; filled++; }
+      }
     });
 
     if (filled < 25) {
