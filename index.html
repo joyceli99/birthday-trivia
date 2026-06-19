@@ -256,11 +256,16 @@ const POINTS = [100,200,300,400,500];
 
 const QUESTIONS = [
   [
-    {q:"Would Julia rather live in her college dorm for another year, or be a digital nomad?",a:"wjr_100"},
-    {q:"Would Julia rather lose her phone for a month, or skip meditation/yoga for a month?",a:"wjr_200"},
-    {q:"Would Julia rather participate in Love Island or Singles Inferno?",a:"wjr_300"},
-    {q:"Would Julia rather watch the same movie, or eat the same food every day for the rest of her life?",a:"wjr_400"},
-    {q:"Would Julia rather live in Classical Greece at its golden age, or in a well-developed future Earth?",a:"wjr_500"},
+    {q:"Would Julia rather live in her college dorm for another year, or be a digital nomad?",a:"wjr_100",
+     choices:[{label:"A",text:"College dorm for another year"},{label:"B",text:"Digital nomad"}]},
+    {q:"Would Julia rather lose her phone for a month, or skip meditation/yoga for a month?",a:"wjr_200",
+     choices:[{label:"A",text:"Lose her phone for a month"},{label:"B",text:"Skip meditation/yoga for a month"}]},
+    {q:"Would Julia rather participate in Love Island or Singles Inferno?",a:"wjr_300",
+     choices:[{label:"A",text:"Love Island"},{label:"B",text:"Singles Inferno"}]},
+    {q:"Would Julia rather watch the same movie, or eat the same food every day for the rest of her life?",a:"wjr_400",
+     choices:[{label:"A",text:"Watch the same movie"},{label:"B",text:"Eat the same food"}]},
+    {q:"Would Julia rather live in Classical Greece at its golden age, or in a well-developed future Earth?",a:"wjr_500",
+     choices:[{label:"A",text:"Classical Greece golden age"},{label:"B",text:"Well-developed future Earth"}]},
   ],
   [
     {q:"Who once got lost trying to find the bathroom at a party and ended up outside — Julia or a friend?",a:"jof_100"},
@@ -337,7 +342,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v4-wjr-personalized';
+  const LAYOUT_VERSION = 'v5-wjr-multiplechoice';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -370,7 +375,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v4-wjr-personalized');
+  localStorage.setItem('julia-board-layout-version','v5-wjr-multiplechoice');
   return layout;
 }
 
@@ -505,7 +510,12 @@ function timerDone() {
     document.getElementById('julia-answer-wrap').style.display='block';
     document.querySelector('.julia-answer-label').textContent = '✅ Correct answer';
   } else if(q?.a) {
-    const answer = juliaAnswers[q.a]||'(no answer yet)';
+    let answer = juliaAnswers[q.a]||'(no answer yet)';
+    // If this question has choices (e.g. Would Julia Rather A/B), translate the letter to readable text
+    if(q.choices && (answer === 'A' || answer === 'B')) {
+      const picked = q.choices.find(c => c.label === answer);
+      if(picked) answer = `${answer}. ${picked.text}`;
+    }
     document.getElementById('julia-answer-box').textContent=answer;
     document.getElementById('julia-answer-wrap').style.display='block';
     document.querySelector('.julia-answer-label').textContent = '💎 Julia\'s answer';
