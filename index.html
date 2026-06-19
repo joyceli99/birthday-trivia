@@ -286,14 +286,34 @@ const QUESTIONS = [
   [
     {q:"How many teams are competing in the 2026 World Cup — the largest in history?",answer:"48 teams"},
     {q:"What is the national dish of Spain?",answer:"Paella (fun fact: many Spaniards consider it a regional Valencian dish, not a national one!)"},
-    {q:"Which country is the lowest-ranked team competing in the 2026 World Cup?",answer:"New Zealand (Curaçao is also a fair answer — sources differ!)"},
-    {q:"Out of Nigeria, Senegal, Ivory Coast, and DR Congo — which one did NOT qualify for the 2026 World Cup?",answer:"Nigeria — they lost the playoff final to DR Congo on penalties (4-3)"},
-    {q:"Which flag belongs to Curaçao — the smallest nation ever to qualify for a World Cup?",answer:"See the flag options below",
+    {q:"Which country is the lowest-ranked team competing in the 2026 World Cup?",
+     answer:"New Zealand",
+     choices:[
+       {label:"A", text:"New Zealand", correct:true},
+       {label:"B", text:"Curaçao", correct:false},
+       {label:"C", text:"Cape Verde", correct:false},
+       {label:"D", text:"Jordan", correct:false}
+     ]},
+    {q:"Out of Nigeria, Senegal, Ivory Coast, and DR Congo — which one did NOT qualify for the 2026 World Cup?",
+     answer:"Nigeria — they lost the playoff final to DR Congo on penalties (4-3)",
+     choices:[
+       {label:"A", text:"Nigeria", correct:true},
+       {label:"B", text:"Senegal", correct:false},
+       {label:"C", text:"Ivory Coast", correct:false},
+       {label:"D", text:"DR Congo", correct:false}
+     ]},
+    {q:"Which flag belongs to Curaçao — the smallest nation ever to qualify for a World Cup?",
      imageOptions:[
        {label:"A", correct:false, country:"Aruba"},
        {label:"B", correct:true, country:"Curaçao"},
        {label:"C", correct:false, country:"Trinidad and Tobago"},
        {label:"D", correct:false, country:"Jamaica"}
+     ],
+     choices:[
+       {label:"A", text:"Aruba", correct:false},
+       {label:"B", text:"Curaçao", correct:true},
+       {label:"C", text:"Trinidad and Tobago", correct:false},
+       {label:"D", text:"Jamaica", correct:false}
      ]},
   ],
 ];
@@ -410,6 +430,14 @@ function openModal(idx,tile,el) {
   remove(ref(db,'round-answers'));
   set(ref(db,'round-active'),true);
 
+  // Sync multiple-choice options to players' phones, if this question has them
+  const choices = tile.question?.choices || null;
+  if(choices) {
+    set(ref(db,'round-choices'), choices);
+  } else {
+    remove(ref(db,'round-choices'));
+  }
+
   const pts = tile.isChaos ? tile.points : tile.points*(tile.multiplier||1);
   const badge = document.getElementById('modal-points-badge');
   badge.className='modal-points-badge'+((!tile.isChaos && tile.multiplier>1)?' diamond':(!tile.isChaos && tile.multiplier<0)?' negative':'');
@@ -466,13 +494,14 @@ function timerDone() {
 
   // Show the answer — either a direct fixed answer (e.g. FIFA trivia) or Julia's submitted answer
   const q = tile.question;
-  if(q?.answer) {
+  if(q?.imageOptions) {
+    // Image-based question — skip the pink answer box, just show the flag cards
+    renderImageOptions(q.imageOptions);
+  } else if(q?.answer) {
     // Fixed-answer question (not from Julia's form)
     document.getElementById('julia-answer-box').textContent = q.answer;
     document.getElementById('julia-answer-wrap').style.display='block';
     document.querySelector('.julia-answer-label').textContent = '✅ Correct answer';
-    // If this question has image options (flags), render them
-    if(q.imageOptions) renderImageOptions(q.imageOptions);
   } else if(q?.a) {
     const answer = juliaAnswers[q.a]||'(no answer yet)';
     document.getElementById('julia-answer-box').textContent=answer;
