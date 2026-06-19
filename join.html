@@ -43,6 +43,9 @@
   .choice-btn.selected{background:var(--pink-hot);color:var(--white);border-color:var(--pink-hot);}
   .choice-letter{width:24px;height:24px;border-radius:6px;background:var(--white);color:var(--pink-deep);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
   .choice-btn.selected .choice-letter{background:rgba(255,255,255,0.25);color:var(--white);}
+  .choice-btn-flag{display:flex;align-items:center;gap:12px;}
+  .choice-flag-img{flex:1;display:flex;align-items:center;}
+  .choice-flag-img svg{width:100%;max-width:140px;height:38px;border-radius:4px;display:block;}
   .submitted-badge{background:var(--pink-light);border:1px solid var(--pink-border);border-radius:10px;padding:10px;font-size:13px;color:var(--pink-deep);display:none;}
 
   /* Timer */
@@ -133,6 +136,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+const FLAG_SVGS = {
+  curacao: `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#002B7F"/><rect y="32" width="60" height="8" fill="#F9D616"/><g fill="#F9D616"><polygon points="14,10 15.2,13.6 19,13.6 16,15.8 17.2,19.4 14,17.2 10.8,19.4 12,15.8 9,13.6 12.8,13.6"/></g><g fill="#F9D616"><polygon points="42,4 42.8,6.4 45.4,6.4 43.3,7.9 44.1,10.3 42,8.8 39.9,10.3 40.7,7.9 38.6,6.4 41.2,6.4"/></g></svg>`,
+  aruba: `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#4189DD"/><rect y="14" width="60" height="4" fill="#F7E017"/><rect y="26" width="60" height="4" fill="#F7E017"/><rect x="40" y="2" width="2.5" height="10" fill="#F7111A"/><polygon points="41.25,2 43.5,4.5 41.25,7 39,4.5" fill="white" stroke="#F7111A" stroke-width="0.5"/></svg>`,
+  tt: `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#CE1126"/><polygon points="0,0 60,40 60,28 12,0" fill="#000000"/><polygon points="0,12 0,40 12,40 60,0 48,0" fill="#000000"/><polygon points="0,8 0,16 8,16" fill="white"/><polygon points="0,24 0,32 8,24" fill="white"/><polygon points="44,0 52,0 60,8" fill="white"/><polygon points="60,32 60,24 52,24" fill="white"/></svg>`,
+  jamaica: `<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="40" fill="#009B3A"/><polygon points="0,0 30,20 0,40" fill="#009B3A"/><polygon points="60,0 30,20 60,40" fill="#009B3A"/><polygon points="0,0 30,20 60,0" fill="#000000"/><polygon points="0,40 30,20 60,40" fill="#000000"/><polygon points="0,0 30,20 0,40" fill="#FED100"/><polygon points="60,0 30,20 60,40" fill="#FED100"/></svg>`
+};
 
 let myPlayerId = localStorage.getItem('julia-player-id');
 let myName = localStorage.getItem('julia-player-name');
@@ -234,11 +244,17 @@ function startAnswerTimer() {
     // Multiple choice mode — render tappable buttons
     textWrap.style.display = 'none';
     choiceWrap.style.display = 'block';
-    choiceWrap.innerHTML = currentChoices.map((c,i) => `
-      <button class="choice-btn" id="choice-btn-${i}" onclick="selectChoice(${i})">
+    choiceWrap.innerHTML = currentChoices.map((c,i) => {
+      if(c.flag && FLAG_SVGS[c.flag]) {
+        return `<button class="choice-btn choice-btn-flag" id="choice-btn-${i}" onclick="selectChoice(${i})">
+          <span class="choice-letter">${c.label}</span>
+          <span class="choice-flag-img">${FLAG_SVGS[c.flag]}</span>
+        </button>`;
+      }
+      return `<button class="choice-btn" id="choice-btn-${i}" onclick="selectChoice(${i})">
         <span class="choice-letter">${c.label}</span> ${c.text}
-      </button>
-    `).join('');
+      </button>`;
+    }).join('');
   } else {
     // Free text mode
     choiceWrap.style.display = 'none';
