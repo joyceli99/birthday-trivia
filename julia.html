@@ -204,28 +204,41 @@
     <div class="cat-label">Julia's Hot Takes</div>
     <div class="question-row">
       <div class="q-points">100 pts</div>
-      <div class="q-text">What is your hot take on pineapple on pizza?</div>
-      <textarea id="jht_100" placeholder="Your spiciest opinion…"></textarea>
+      <div class="q-text">Which Bay Area restaurant do you find super overrated?</div>
+      <textarea id="jht_100" placeholder="Name the actual spot…"></textarea>
     </div>
     <div class="question-row">
       <div class="q-points">200 pts</div>
-      <div class="q-text">What do you think about people who don't text back within an hour?</div>
-      <textarea id="jht_200" placeholder="Your honest take…"></textarea>
+      <div class="q-text">Taylor Frankie Paul's Bachelorette season got cancelled — do you want it to air, or stay cancelled?</div>
+      <div class="wr-toggle" data-id="jht_200">
+        <button type="button" class="wr-option" data-value="A">Air it</button>
+        <button type="button" class="wr-option" data-value="B">Leave it cancelled</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">300 pts</div>
-      <div class="q-text">What is your most controversial opinion about a popular TV show or movie?</div>
-      <textarea id="jht_300" placeholder="Name the show/movie and the take…"></textarea>
+      <div class="q-text">Which quality of a man do you find overrated?</div>
+      <div class="wr-toggle" data-id="jht_300">
+        <button type="button" class="wr-option" data-value="A">Height</button>
+        <button type="button" class="wr-option" data-value="B">Looks</button>
+        <button type="button" class="wr-option" data-value="C">Hairline</button>
+        <button type="button" class="wr-option" data-value="D">Style</button>
+        <button type="button" class="wr-option" data-value="E">Humor</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">400 pts</div>
-      <div class="q-text">What do you think is the most overrated travel destination?</div>
-      <textarea id="jht_400" placeholder="Be brutally honest…"></textarea>
+      <div class="q-text">What do you think is the most annoying Gen Z dating trend?</div>
+      <div class="wr-toggle" data-id="jht_400">
+        <button type="button" class="wr-option" data-value="A">Situationships</button>
+        <button type="button" class="wr-option" data-value="B">Breadcrumbing</button>
+        <button type="button" class="wr-option" data-value="C">Talking stages that never end</button>
+      </div>
     </div>
     <div class="question-row">
       <div class="q-points">500 pts</div>
-      <div class="q-text">What is your spiciest opinion about dating in 2026?</div>
-      <textarea id="jht_500" placeholder="Don't hold back…"></textarea>
+      <div class="q-text">What's the oldest age you would date?</div>
+      <textarea id="jht_500" placeholder="Just the number…"></textarea>
     </div>
   </div>
 
@@ -259,31 +272,9 @@
   </div>
 
   <div class="category-block">
-    <div class="cat-label">Global Politics</div>
-    <div class="question-row">
-      <div class="q-points">100 pts</div>
-      <div class="q-text">Which world leader do you think would be the most chaotic dinner guest?</div>
-      <textarea id="gp_100" placeholder="Name and why, ideally…"></textarea>
-    </div>
-    <div class="question-row">
-      <div class="q-points">200 pts</div>
-      <div class="q-text">If you were president for a day, what is the first law you would pass?</div>
-      <textarea id="gp_200" placeholder="Go wild"></textarea>
-    </div>
-    <div class="question-row">
-      <div class="q-points">300 pts</div>
-      <div class="q-text">Which country do you think has the best approach to work-life balance?</div>
-      <textarea id="gp_300" placeholder="Your pick…"></textarea>
-    </div>
-    <div class="question-row">
-      <div class="q-points">400 pts</div>
-      <div class="q-text">If you had to explain a current geopolitical conflict using only a reality TV show analogy, which show would you pick and why?</div>
-      <textarea id="gp_400" placeholder="The more unhinged the better"></textarea>
-    </div>
-    <div class="question-row">
-      <div class="q-points">500 pts</div>
-      <div class="q-text">What do you think is the most underrated country in the world?</div>
-      <textarea id="gp_500" placeholder="Surprise us"></textarea>
+    <div class="cat-label">⚽ FIFA Countries</div>
+    <div class="question-row" style="text-align:center; color: var(--text-muted); font-style: italic;">
+      No answers needed here — this category is regular trivia about the World Cup, not about you! 💎
     </div>
   </div>
 
@@ -323,10 +314,9 @@
     'jf_100','jf_200','jf_300','jf_400','jf_500',
     'jht_100','jht_200','jht_300','jht_400','jht_500',
     'bj_100','bj_200','bj_300','bj_400','bj_500',
-    'gp_100','gp_200','gp_300','gp_400','gp_500',
   ];
 
-  const TOGGLE_KEYS = ['wjr_100','wjr_200','wjr_300','wjr_400','wjr_500'];
+  const TOGGLE_KEYS = ['wjr_100','wjr_200','wjr_300','wjr_400','wjr_500','jht_200','jht_300','jht_400'];
 
   // Wire up toggle button clicks
   document.querySelectorAll('.wr-toggle').forEach(group => {
@@ -375,8 +365,8 @@
       }
     });
 
-    if (filled < 25) {
-      note.textContent = `${filled}/25 answered — fill in all questions before submitting!`;
+    if (filled < 20) {
+      note.textContent = `${filled}/20 answered — fill in all questions before submitting!`;
       note.style.color = '#A32D2D';
       return;
     }
