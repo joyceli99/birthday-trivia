@@ -43,6 +43,9 @@
   /* JOIN BANNER */
   .join-banner { text-align: center; padding: 0.25rem 1rem 0.5rem; font-size: 12px; color: var(--text-muted); }
   .join-banner a { color: var(--pink-hot); font-weight: 600; text-decoration: none; }
+  .qr-wrap { display: flex; justify-content: center; padding: 0.5rem 0 0.75rem; }
+  .qr-box { background: var(--white); border: 1.5px solid var(--pink-border); border-radius: 14px; padding: 10px; display: inline-block; }
+  .qr-box img { display: block; width: 110px; height: 110px; border-radius: 6px; }
 
   /* MODAL */
   .modal-bg { display: none; position: fixed; inset: 0; background: rgba(72,10,30,0.75); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
@@ -152,6 +155,9 @@
   <div class="header-sub">Summer 2026</div>
 </div>
 <div class="join-banner">Players join at <a id="join-url" href="join.html">join.html</a></div>
+<div class="qr-wrap">
+  <div class="qr-box"><img id="qr-code" src="" alt="Scan to join"/></div>
+</div>
 <div class="scoreboard" id="scoreboard"><div class="no-players">Waiting for players to join…</div></div>
 <div class="board-wrap">
   <div class="cat-row" id="cat-row"></div>
@@ -901,6 +907,7 @@ function showToast(msg) {
 const base=window.location.href.replace('index.html','').replace(/\/$/,'');
 document.getElementById('join-url').href='join.html';
 document.getElementById('join-url').textContent=base+'/join.html';
+document.getElementById('qr-code').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=72243E&bgcolor=FFFFFF&data='+encodeURIComponent(base+'/join.html');
 
 renderBoard();
 </script>
