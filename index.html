@@ -152,6 +152,14 @@
   }
 
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--pink-deep); color: var(--white); border-radius: 99px; padding: 10px 24px; font-size: 14px; font-weight: 500; z-index: 200; transition: transform 0.3s ease; white-space: nowrap; }
+
+  /* EMOJI RAIN */
+  .emoji-rain-layer { position: fixed; inset: 0; pointer-events: none; z-index: 250; overflow: hidden; }
+  .emoji-piece { position: absolute; top: -40px; font-size: 28px; animation: emojiFall linear forwards; will-change: transform; }
+  @keyframes emojiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0.9; }
+  }
   .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -226,6 +234,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="emoji-rain-layer" id="emoji-rain-layer"></div>
 
 <!-- CHAOS OVERLAY -->
 <div class="chaos-overlay" id="chaos-overlay">
@@ -385,11 +394,22 @@ let players = {};
 let currentTile = null;
 let timerInterval = null;
 let timerSeconds = 30;
+let lastSubmissionCount = 0;
 let selectedWinners = new Set();
 let modalStep = 'timer'; // timer | reveal | award | chaos-pick | done
 
 get(ref(db,'julia-answers')).then(s=>{ if(s.exists()) juliaAnswers=s.val(); });
-onValue(ref(db,'players'), s=>{ players=s.exists()?s.val():{}; renderScoreboard(); if(currentTile) renderAnswersList(); });
+onValue(ref(db,'players'), s=>{
+  players=s.exists()?s.val():{};
+  renderScoreboard();
+  if(currentTile) renderAnswersList();
+  // Small emoji burst when a new answer comes in during an active round
+  const submissionCount = Object.values(players).filter(p => p.roundAnswer).length;
+  if (currentTile && submissionCount > lastSubmissionCount) {
+    emojiRain(6);
+  }
+  lastSubmissionCount = submissionCount;
+});
 
 function renderScoreboard() {
   const el = document.getElementById('scoreboard');
@@ -619,6 +639,7 @@ async function awardSelectedWinners() {
   }
 
   showToast(`+${pts} pts to ${selectedWinners.size} player(s)`);
+  emojiRain(28); // big celebratory burst on award
 
   if(tile.isChaos) {
     // Fullscreen chaos overlay — auto-dismisses after 2.5s then shows power selection
@@ -1003,6 +1024,28 @@ function showToast(msg) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Emoji rain burst — count controls how many fall, size controls how big the celebration feels
+const EMOJI_POOL = ['✨','🎉','💎','❤️','🎂'];
+function emojiRain(count = 12) {
+  const layer = document.getElementById('emoji-rain-layer');
+  if (!layer) return;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'emoji-piece';
+    el.textContent = EMOJI_POOL[Math.floor(Math.random() * EMOJI_POOL.length)];
+    const left = Math.random() * 100;
+    const duration = 2.2 + Math.random() * 1.6;
+    const delay = Math.random() * 0.4;
+    const size = 20 + Math.random() * 22;
+    el.style.left = left + 'vw';
+    el.style.fontSize = size + 'px';
+    el.style.animationDuration = duration + 's';
+    el.style.animationDelay = delay + 's';
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), (duration + delay) * 1000 + 200);
+  }
 }
 
 // Set join URL
