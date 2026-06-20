@@ -435,12 +435,8 @@ function openModal(idx,tile,el) {
 
   // Clear any previous round answers
   remove(ref(db,'round-answers'));
-  // Write the actual end timestamp so late joiners calculate real remaining time
-  const roundEndTime = Date.now() + 30000;
-  set(ref(db,'round-active'),true);
-  set(ref(db,'round-end-time'), roundEndTime);
 
-  // Sync multiple-choice options to players' phones, if this question has them
+  // Build choices BEFORE writing round state, so everything goes out together
   let choices = tile.question?.choices || null;
   // For decoy-based questions (e.g. Julia's Favorites), build choices from Julia's real answer + decoys
   if(!choices && tile.question?.decoys && tile.question?.a) {
@@ -453,11 +449,15 @@ function openModal(idx,tile,el) {
     // If Julia hasn't answered yet, choices stays null and player gets free text instead
   }
   currentTile.choices = choices; // remember for the reveal step
-  if(choices) {
-    set(ref(db,'round-choices'), choices);
-  } else {
-    remove(ref(db,'round-choices'));
-  }
+
+  // Single atomic write under one path — guarantees phones never read a stale
+  // choices value paired with a fresh timer, since it's all one JSON blob.
+  const roundEndTime = Date.now() + 30000;
+  set(ref(db, 'round-info'), {
+    active: true,
+    endTime: roundEndTime,
+    choices: choices || null
+  });
 
   const pts = tile.isChaos ? tile.points : tile.points*(tile.multiplier||1);
   const badge = document.getElementById('modal-points-badge');
@@ -503,7 +503,7 @@ function updateTimerDisplay() {
 }
 
 function timerDone() {
-  set(ref(db,'round-active'),false);
+  update(ref(db, 'round-info'), {active: false});
   document.getElementById('timer-wrap').style.display='none';
 
   // Show question text properly if it was hidden for chaos
@@ -978,7 +978,7 @@ function markUsed(idx) {
 
 window.closeModal=function() {
   clearInterval(timerInterval);
-  set(ref(db,'round-active'),false);
+  update(ref(db, 'round-info'), {active: false});
   // Clear round answers
   Object.keys(players).forEach(pid=>update(ref(db,`players/${pid}`),{roundAnswer:null}));
   document.getElementById('modal-bg').classList.remove('open');
@@ -992,7 +992,7 @@ const origClose=window.closeModal;
 window.closeModal=function(){
   if(currentTile) markUsed(currentTile.idx);
   clearInterval(timerInterval);
-  set(ref(db,'round-active'),false);
+  update(ref(db, 'round-info'), {active: false});
   Object.keys(players).forEach(pid=>update(ref(db,`players/${pid}`),{roundAnswer:null}));
   document.getElementById('modal-bg').classList.remove('open');
   currentTile=null;
