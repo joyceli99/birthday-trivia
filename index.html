@@ -428,7 +428,7 @@ const CHAOS_TILES = [
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v11-balanced-multipliers';
+  const LAYOUT_VERSION = 'v12-only-two-2x';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -450,7 +450,7 @@ function buildLayout() {
   let ci=0;
   // Multiplier pool now only applies to 100/200pt tiles (rows 0-1), caps max swing at 600 (200x3)
   // 10 entries to safely cover the worst case (row 0 always has 5 point tiles, row 1 can have up to 5 more)
-  const lowTierMultipliers = [1,1,1,1,1,1,1,2,2,3];
+  const lowTierMultipliers = [1,1,1,1,1,1,1,1,2,2];
   const shuffledMults = lowTierMultipliers.sort(() => Math.random() - 0.5);
   let mi=0;
   const layout=[];
@@ -468,7 +468,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v11-balanced-multipliers');
+  localStorage.setItem('julia-board-layout-version','v12-only-two-2x');
   return layout;
 }
 
