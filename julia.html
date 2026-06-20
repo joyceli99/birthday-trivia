@@ -210,30 +210,17 @@
     <div class="question-row">
       <div class="q-points">200 pts</div>
       <div class="q-text">Taylor Frankie Paul's Bachelorette season got cancelled — do you want it to air, or stay cancelled?</div>
-      <div class="wr-toggle" data-id="jht_200">
-        <button type="button" class="wr-option" data-value="A">Air it</button>
-        <button type="button" class="wr-option" data-value="B">Leave it cancelled</button>
-      </div>
+      <textarea id="jht_200" placeholder="Air it / Leave it cancelled"></textarea>
     </div>
     <div class="question-row">
       <div class="q-points">300 pts</div>
       <div class="q-text">Which quality of a man do you find overrated?</div>
-      <div class="wr-toggle" data-id="jht_300">
-        <button type="button" class="wr-option" data-value="A">Height</button>
-        <button type="button" class="wr-option" data-value="B">Looks</button>
-        <button type="button" class="wr-option" data-value="C">Hairline</button>
-        <button type="button" class="wr-option" data-value="D">Style</button>
-        <button type="button" class="wr-option" data-value="E">Humor</button>
-      </div>
+      <textarea id="jht_300" placeholder="e.g. Height, looks, hairline, style, humor…"></textarea>
     </div>
     <div class="question-row">
       <div class="q-points">400 pts</div>
       <div class="q-text">What do you think is the most annoying Gen Z dating trend?</div>
-      <div class="wr-toggle" data-id="jht_400">
-        <button type="button" class="wr-option" data-value="A">Situationships</button>
-        <button type="button" class="wr-option" data-value="B">Breadcrumbing</button>
-        <button type="button" class="wr-option" data-value="C">Talking stages that never end</button>
-      </div>
+      <textarea id="jht_400" placeholder="Your honest take…"></textarea>
     </div>
     <div class="question-row">
       <div class="q-points">500 pts</div>
@@ -316,7 +303,7 @@
     'bj_100','bj_200','bj_300','bj_400','bj_500',
   ];
 
-  const TOGGLE_KEYS = ['wjr_100','wjr_200','wjr_300','wjr_400','wjr_500','jht_200','jht_300','jht_400'];
+  const TOGGLE_KEYS = ['wjr_100','wjr_200','wjr_300','wjr_400','wjr_500'];
 
   // Wire up toggle button clicks
   document.querySelectorAll('.wr-toggle').forEach(group => {
