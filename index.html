@@ -426,11 +426,9 @@ const CHAOS_TILES = [
   {type:"birthday",icon:"🎂",title:"Birthday girl bonus",desc:"Everyone who matched Julia's answer gets 500 bonus points.",bonus:500},
 ];
 
-const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
-
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v10-all-free-text';
+  const LAYOUT_VERSION = 'v11-balanced-multipliers';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -449,7 +447,12 @@ function buildLayout() {
     eligible.sort(()=>Math.random()-0.5).slice(0,12).map(p=>`${p.row}-${p.col}`)
   );
 
-  let ci=0, mi=0;
+  let ci=0;
+  // Multiplier pool now only applies to 100/200pt tiles (rows 0-1), caps max swing at 600 (200x3)
+  // 10 entries to safely cover the worst case (row 0 always has 5 point tiles, row 1 can have up to 5 more)
+  const lowTierMultipliers = [1,1,1,1,1,1,1,2,2,3];
+  const shuffledMults = lowTierMultipliers.sort(() => Math.random() - 0.5);
+  let mi=0;
   const layout=[];
   for(let r=0;r<5;r++) for(let c=0;c<5;c++) {
     const key=`${r}-${c}`;
@@ -459,11 +462,13 @@ function buildLayout() {
       // Chaos tile: still has a trivia question + a hidden chaos bonus
       layout.push({isChaos:true, chaos:CHAOS_TILES[ci++], question, points, row:r, col:c});
     } else {
-      layout.push({isChaos:false, question, points, multiplier:MULTIPLIERS[mi++], row:r, col:c});
+      // Only rows 0 (100pt) and 1 (200pt) ever get a multiplier other than 1x
+      const multiplier = (r <= 1) ? (shuffledMults[mi++] ?? 1) : 1;
+      layout.push({isChaos:false, question, points, multiplier, row:r, col:c});
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v10-all-free-text');
+  localStorage.setItem('julia-board-layout-version','v11-balanced-multipliers');
   return layout;
 }
 
