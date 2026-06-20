@@ -680,6 +680,15 @@ function showChaosWinnerSelect(chaos) {
     showSipChecklist([...selectedWinners], chaos.bonus);
     return;
   }
+  // Steal and sabotage skip winner-select too — every winner automatically gets their turn
+  if(chaos.type === 'steal') {
+    stealLoop([...selectedWinners], 0);
+    return;
+  }
+  if(chaos.type === 'sabotage') {
+    sabotageLoop([...selectedWinners], 0);
+    return;
+  }
   const wrap = document.getElementById('chaos-winner-wrap');
   const lbl = document.getElementById('chaos-winner-label');
   const btns = document.getElementById('chaos-winner-btns');
@@ -969,7 +978,7 @@ function renderPlayerPicker(label, playerEntries, onPick) {
   if(!wrap || !btns || !lbl) { console.error('Picker elements missing'); return; }
   // Show wrap FIRST before writing to children
   wrap.style.display = 'block';
-  if(actionBtn) actionBtn.disabled = true;
+  if(actionBtn) actionBtn.style.display = 'none';
   lbl.textContent = label;
   if(!playerEntries.length) {
     btns.innerHTML = '<div style="font-size:13px;color:#F4C0D1;text-align:center">No other players to pick from!</div>';
