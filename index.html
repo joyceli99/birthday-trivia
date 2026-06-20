@@ -268,36 +268,17 @@ const QUESTIONS = [
      choices:[{label:"A",text:"Classical Greece golden age"},{label:"B",text:"Well-developed future Earth"}]},
   ],
   [
-    {q:"What's Julia's favorite color?",a:"jf_100",
-     decoys:["Red","Black","Yellow"]},
-    {q:"What's Julia's favorite movie?",a:"jf_200",
-     decoys:["The Notebook","Inception","La La Land"]},
-    {q:"What's Julia's favorite cuisine?",a:"jf_300",
-     decoys:["Italian","Thai","Mexican"]},
-    {q:"What's Julia's favorite bar?",a:"jf_400",
-     decoys:["The Dead Rabbit","Death & Co","Employees Only"]},
-    {q:"What's Julia's favorite workout class?",a:"jf_500",
-     decoys:["Pilates","Spin","CrossFit"]},
+    {q:"What's Julia's favorite color?",a:"jf_100"},
+    {q:"What's Julia's favorite movie?",a:"jf_200"},
+    {q:"What's Julia's favorite cuisine?",a:"jf_300"},
+    {q:"What's Julia's favorite bar?",a:"jf_400"},
+    {q:"What's Julia's favorite workout class?",a:"jf_500"},
   ],
   [
-    {q:"Which Bay Area restaurant does Julia find super overrated?",a:"jht_100",
-     decoys:["State Bird Provisions","The Slanted Door","Zuni Café"]},
-    {q:"Does Julia want Taylor Frankie Paul's cancelled Bachelorette season to air, or not?",a:"jht_200",
-     choices:[{label:"A",text:"Air it"},{label:"B",text:"Leave it cancelled"}]},
-    {q:"Which quality of a man does Julia find overrated?",a:"jht_300",
-     choices:[
-       {label:"A",text:"Height"},
-       {label:"B",text:"Looks"},
-       {label:"C",text:"Hairline"},
-       {label:"D",text:"Style"},
-       {label:"E",text:"Humor"}
-     ]},
-    {q:"What does Julia think is the most annoying Gen Z dating trend?",a:"jht_400",
-     choices:[
-       {label:"A",text:"Situationships"},
-       {label:"B",text:"Breadcrumbing"},
-       {label:"C",text:"Talking stages that never end"}
-     ]},
+    {q:"Which Bay Area restaurant does Julia find super overrated?",a:"jht_100"},
+    {q:"Does Julia want Taylor Frankie Paul's cancelled Bachelorette season to air, or not?",a:"jht_200"},
+    {q:"Which quality of a man does Julia find overrated?",a:"jht_300"},
+    {q:"What does Julia think is the most annoying Gen Z dating trend?",a:"jht_400"},
     {q:"What's the oldest age Julia would date? (closest guess wins)",a:"jht_500"},
   ],
   [
@@ -361,7 +342,7 @@ const MULTIPLIERS = [1,1,1,1,1,1,1,1,2,2,3,1,1];
 
 function buildLayout() {
   // Version stamp — bump this whenever QUESTIONS/CHAOS_TILES change, forces a fresh board
-  const LAYOUT_VERSION = 'v9-closest-wins';
+  const LAYOUT_VERSION = 'v10-all-free-text';
   const saved = localStorage.getItem('julia-board-layout');
   const savedVersion = localStorage.getItem('julia-board-layout-version');
   if (saved && savedVersion === LAYOUT_VERSION) {
@@ -394,7 +375,7 @@ function buildLayout() {
     }
   }
   localStorage.setItem('julia-board-layout',JSON.stringify(layout));
-  localStorage.setItem('julia-board-layout-version','v9-closest-wins');
+  localStorage.setItem('julia-board-layout-version','v10-all-free-text');
   return layout;
 }
 
