@@ -160,19 +160,12 @@ onValue(ref(db,'players'), s => {
   renderLeaderboard();
 });
 
-// Round choices watcher — multiple choice questions
-onValue(ref(db,'round-choices'), s => {
-  currentChoices = s.exists() ? s.val() : null;
-});
-
-// Round end time watcher — the shared timestamp used to calculate real remaining time
-onValue(ref(db,'round-end-time'), s => {
-  roundEndTime = s.exists() ? s.val() : null;
-});
-
-// Round active watcher
-onValue(ref(db,'round-active'), s => {
-  roundActive = s.exists() && s.val() === true;
+// Single round-info listener — active, endTime, and choices always arrive together as one consistent payload
+onValue(ref(db,'round-info'), s => {
+  const info = s.exists() ? s.val() : null;
+  currentChoices = info?.choices || null;
+  roundEndTime = info?.endTime || null;
+  roundActive = info?.active === true;
   if(roundActive) startAnswerTimer();
   else stopAnswerTimer();
 });
