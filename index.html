@@ -435,7 +435,10 @@ function openModal(idx,tile,el) {
 
   // Clear any previous round answers
   remove(ref(db,'round-answers'));
+  // Write the actual end timestamp so late joiners calculate real remaining time
+  const roundEndTime = Date.now() + 30000;
   set(ref(db,'round-active'),true);
+  set(ref(db,'round-end-time'), roundEndTime);
 
   // Sync multiple-choice options to players' phones, if this question has them
   let choices = tile.question?.choices || null;
