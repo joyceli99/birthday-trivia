@@ -692,7 +692,15 @@ function showChaosWinnerSelect(chaos) {
   window._chaosType = chaos;
 
   const render = () => {
-    lbl.textContent = `Who gets the chaos power? Select all that apply.`;
+    const verbMap = {
+      steal: 'Who gets to steal 200 pts from someone?',
+      sabotage: 'Who gets to sabotage someone (−200 pts)?',
+      pick: 'Who banks the bonus points?',
+      doubledown: 'Whose points get doubled?',
+      swap: 'Who swaps scores with last place?',
+      birthday: 'Who gets the birthday bonus?'
+    };
+    lbl.textContent = verbMap[chaos.type] || 'Who gets the chaos power? Select all that apply.';
     btns.innerHTML = [...selectedWinners].map(pid => {
       const sel = window._chaosSelected.has(pid);
       return `<button class="chaos-winner-btn"
